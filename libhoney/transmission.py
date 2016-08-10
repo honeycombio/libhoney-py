@@ -73,7 +73,7 @@ class Transmission():
         req.headers.update({
             "X-Event-Time": ev.created_at.isoformat("T"),
             "X-Honeycomb-Team": ev.writekey,
-            "X-Honeycomb-SampleRate": ev.sample_rate})
+            "X-Honeycomb-SampleRate": str(ev.sample_rate)})
         preq = self.session.prepare_request(req)
         resp = self.session.send(preq)
         if (resp.status_code == 200):
