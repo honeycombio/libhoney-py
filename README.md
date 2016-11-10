@@ -9,7 +9,7 @@ your python code.
 For an overview of how to use a honeycomb library, see our documentation at
 https://honeycomb.io/docs/send-data/sdks/
 
-For specifics on the go libhoney, check out the
+For specifics on the python libhoney, check out the
 [pydoc](https://honeycomb.io/docs/send-data/sdks/python/)
 
 ## Basic usage:
@@ -23,19 +23,17 @@ For specifics on the go libhoney, check out the
 ## Example
 
 ```
-main() {
-  # call init before using libhoney
-  libhoney.init(writekey="abcd1234", dataset="my data")
-  # create an event and add fields to it
-  ev = Event()
-  ev.add_field("duration_ms", 153.12)
-  ev.add_field("method", "get")
-  # send the event
-  ev.send()
+# call init before using libhoney
+libhoney.init(writekey="abcd1234", dataset="my data")
+# create an event and add fields to it
+ev = Event()
+ev.add_field("duration_ms", 153.12)
+ev.add_field("method", "get")
+# send the event
+ev.send()
 
-  # when all done, call close
-  libhoney.close()
-}
+# when all done, call close
+libhoney.close()
 ```
 
 You can find a more complete example demonstrating usage in `example.py`
