@@ -265,6 +265,7 @@ class TestEvent(unittest.TestCase):
         libhoney._should_drop.assert_called_with(5)
 
         # test that send_presampled() does not drop
+        libhoney._should_drop.reset_mock()
         ev.send_presampled()
         libhoney._xmit.send.assert_called_with(ev)
         libhoney._should_drop.assert_not_called()
