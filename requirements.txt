@@ -1,1 +1,4 @@
--e .
+requests==2.11.1
+six==1.10.0
+statsd==3.2.1
+wsgiref==0.1.2
