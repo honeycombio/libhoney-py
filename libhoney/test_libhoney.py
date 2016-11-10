@@ -14,6 +14,7 @@ def sample_dyn_fn():
 class FakeTransmitter():
     def __init__(self, id):
         self.id = id
+
     def get_response_queue(self):
         return None
 
@@ -69,9 +70,11 @@ class TestFieldHolder(unittest.TestCase):
     def test_add_field(self):
         expected_data = {}
         self.assertEqual(libhoney._fields._data, expected_data)
+        self.assertTrue(libhoney._fields.is_empty())
         libhoney.add_field("foo", 4)
         expected_data["foo"] = 4
         self.assertEqual(libhoney._fields._data, expected_data)
+        self.assertFalse(libhoney._fields.is_empty())
         libhoney.add_field("bar", "baz")
         expected_data["bar"] = "baz"
         self.assertEqual(libhoney._fields._data, expected_data)
@@ -90,6 +93,7 @@ class TestFieldHolder(unittest.TestCase):
         self.assertEqual(libhoney._fields._dyn_fields, expected_dyn_fns)
         with self.assertRaises(TypeError):
             libhoney.add_dynamic_field("foo")
+
 
 
 class TestBuilder(unittest.TestCase):
@@ -208,6 +212,63 @@ class TestEvent(unittest.TestCase):
 
     def test_send(self):
         libhoney._xmit = mock.MagicMock()
+
         ev = libhoney.Event()
+        with self.assertRaises(libhoney.SendError) as c1:
+            ev.send()
+        self.assertTrue("No metrics added to event. Won't send empty event." in c1.exception)
+        ev = libhoney.Event()
+        ev.add_field("f", "g")
+        with self.assertRaises(libhoney.SendError) as c2:
+            ev.send()
+        self.assertTrue("No APIHost for Honeycomb. Can't send to the Great Unknown." in c2.exception)
+        ev.api_host = "myhost"
+        with self.assertRaises(libhoney.SendError) as c2:
+            ev.send()
+        self.assertTrue("No WriteKey specified. Can't send event." in c2.exception)
+        ev.writekey = "letmewrite"
+        with self.assertRaises(libhoney.SendError) as c2:
+            ev.send()
+        self.assertTrue("No Dataset for Honeycomb. Can't send datasetless." in c2.exception)
+        ev.dataset = "storeme"
         ev.send()
         libhoney._xmit.send.assert_called_with(ev)
+
+    def test_send_sampling(self):
+        libhoney._xmit = mock.MagicMock()
+        libhoney._should_drop = mock.MagicMock(return_value=True)
+
+        # test that send() drops when should_drop is true
+        ev = libhoney.Event()
+        ev.send()
+        libhoney._xmit.send.assert_not_called()
+        libhoney._should_drop.assert_called_with(1)
+        ev = libhoney.Event()
+        ev.sample_rate = 5
+        ev.send()
+        libhoney._xmit.send.assert_not_called()
+        libhoney._should_drop.assert_called_with(5)
+
+        # and actually sends them along when should_drop is false
+        libhoney._should_drop = mock.MagicMock(return_value=False)
+        ev = libhoney.Event()
+        ev.add_field("f", "g")
+        ev.api_host = "myhost"
+        ev.writekey = "letmewrite"
+        ev.dataset = "storeme"
+        ev.send()
+        libhoney._xmit.send.assert_called_with(ev)
+        libhoney._should_drop.assert_called_with(1)
+        ev.sample_rate = 5
+        ev.send()
+        libhoney._xmit.send.assert_called_with(ev)
+        libhoney._should_drop.assert_called_with(5)
+
+        # test that send_presampled() does not drop
+        ev.send_presampled()
+        libhoney._xmit.send.assert_called_with(ev)
+        libhoney._should_drop.assert_not_called()
+        ev.sample_rate = 5
+        ev.send_presampled()
+        libhoney._xmit.send.assert_called_with(ev)
+        libhoney._should_drop.assert_not_called()

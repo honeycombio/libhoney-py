@@ -31,7 +31,7 @@ g_sample_rate = 1
 g_responses = queue.Queue(maxsize=1)
 g_block_on_response = False
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 transmission.VERSION = VERSION
 
 sd = statsd.StatsClient(prefix="libhoney")
@@ -150,6 +150,10 @@ class FieldHolder:
         except AttributeError:
             raise TypeError("add requires a dict-like argument")
 
+    def is_empty(self):
+        '''returns true if there is no data in this FieldHolder'''
+        return len(self._data) == 0
+
     def __str__(self):
         '''returns a JSON blob of the fields in this holder'''
         return json.dumps(self._data)
@@ -265,16 +269,38 @@ class Event(object):
     def send(self):
         '''send queues this event for transmission to Honeycomb.
         Raises a SendError exception when called with an uninitialized
-        libhoney'''
+        libhoney. Will drop sampled events when samplerate > 1'''
         global _xmit
         if _xmit is None:
-            # do this instead of a try below to error even when sampled
+            # do this in addition to below to error even when sampled
             raise SendError(
                 "Tried to send on a closed or uninitialized libhoney")
         if _should_drop(self.sample_rate):
             sd.incr("sampled")
             _send_dropped_response(self)
             return
+        self.send_presampled()
+
+    def send_presampled(self):
+        '''send_presampled queues this event for transmission to Honeycomb.
+        Caller is responsible for sampling logic - will not drop any events
+        for sampling.'''
+        global _xmit
+        if _xmit is None:
+            raise SendError(
+                "Tried to send on a closed or uninitialized libhoney")
+        if self._fields.is_empty():
+            raise SendError(
+                "No metrics added to event. Won't send empty event.")
+        if self.api_host == "":
+            raise SendError(
+                "No APIHost for Honeycomb. Can't send to the Great Unknown.")
+        if self.writekey == "":
+            raise SendError(
+                "No WriteKey specified. Can't send event.")
+        if self.dataset == "":
+            raise SendError(
+                "No Dataset for Honeycomb. Can't send datasetless.")
         _xmit.send(self)
 
     def __str__(self):
