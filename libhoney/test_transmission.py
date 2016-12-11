@@ -97,7 +97,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
             ev = FakeEvent()
             ev.writekey = "writeme"
             ev.dataset = "datame"
-            ev.api_host = "http://urlme"
+            ev.api_host = "http://urlme/"
             ev.metadata = "metame"
             ev.sample_rate = 3
             m.post("http://urlme/1/events/datame", text="", status_code=200)

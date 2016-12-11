@@ -1,6 +1,7 @@
 '''Transmission handles colleting and sending individual events to Honeycomb'''
 
 from six.moves import queue
+from urlparse import urljoin
 import threading
 import requests
 import statsd
@@ -68,7 +69,7 @@ class Transmission():
         '''_send should only be called from sender and sends an individual
             event to Honeycomb'''
         start = get_now()
-        url = ev.api_host + "/1/events/" + ev.dataset
+        url = urljoin(urljoin(ev.api_host, "/1/events/"), ev.dataset)
         req = requests.Request('POST', url, data=str(ev))
         req.headers.update({
             "X-Event-Time": ev.created_at.isoformat("T"),
