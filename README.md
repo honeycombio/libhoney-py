@@ -1,38 +1,37 @@
-A Python library for sending data to Honeycomb (http://honeycomb.io)
-========================================================
+# libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-py.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-py)
 
-## Summary
+Python library for sending events to [Honeycomb](https://honeycomb.io). (See here for more information about [using Honeycomb](https://honeycomb.io/intro/) and [its libraries](https://honeycomb.io/docs/send-data/sdks).)
 
-libhoney is written to ease the process of sending data to Honeycomb from within
-your python code.
+## Installation
 
-For an overview of how to use a honeycomb library, see our documentation at
-https://honeycomb.io/docs/send-data/sdks/
+To install from source:
 
-For specifics on the python libhoney, check out the
-[pydoc](https://honeycomb.io/docs/send-data/sdks/python/)
+```
+python setup.py install
+```
 
-## Basic usage:
+## Documentation
 
-* call `init` to initialize libhoney with your Honeycomb writekey and dataset
-  name
-* create an event object and populate it with fields
-* send the event object
-* call `close` when your program is finished
+A pydoc API reference is available at https://honeycomb.io/docs/send-data/sdks/python/
 
 ## Example
 
-```
-# call init before using libhoney
-libhoney.init(writekey="abcd1234", dataset="my data")
-# create an event and add fields to it
-ev = Event()
-ev.add_field("duration_ms", 153.12)
-ev.add_field("method", "get")
-# send the event
-ev.send()
+Honeycomb can calculate all sorts of statistics, so send the values you care about and let us crunch the averages, percentiles, lower/upper bounds, cardinality -- whatever you want -- for you.
 
-# when all done, call close
+```python
+import libhoney
+
+# Call init to configure libhoney
+libhoney.init(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example")
+
+libhoney.send_now({
+  "duration_ms": 153.12,
+  "method": "get",
+  "hostname": "appserver15",
+  "payload_length": 27
+})
+
+# Call close to flush any pending calls to Honeycomb
 libhoney.close()
 ```
 

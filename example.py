@@ -21,6 +21,8 @@ def num_threads():
     return threading.activeCount()
 
 
+# run factorial. libh_builder comes with some fields already populated
+# (namely, "version", "num_threads", and "range")
 def run_fact(low, high, libh_builder):
     for i in range(low, high):
         ev = libh_builder.new_event()
@@ -49,11 +51,17 @@ def main():
     resps = libhoney.responses()
     t = threading.Thread(target=read_responses, args=(resps,))
     t.start()
+
+    # attach fields to top-level instance
     libhoney.add_field("version", "3.4.5")
     libhoney.add_dynamic_field(num_threads)
+
+    # sends an event with "version", "num_threads", and "status" fields
     libhoney.send_now({"status": "starting run"})
     run_fact(1, 2, libhoney.Builder({"range": "low"}))
     run_fact(31, 32, libhoney.Builder({"range": "high"}))
+
+    # sends an event with "version", "num_threads", and "status" fields
     libhoney.send_now({"status": "ending run"})
     libhoney.close()
 
