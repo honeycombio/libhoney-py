@@ -35,7 +35,7 @@ libhoney.send_now({
 libhoney.close()
 ```
 
-You can find a more complete example demonstrating usage in `example.py`
+You can find a more complete example demonstrating usage in [`example.py`](example.py)
 
 ## Contributions
 
