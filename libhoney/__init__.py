@@ -20,6 +20,7 @@ import inspect
 import statsd
 import random
 from six.moves import queue
+from .version import VERSION
 
 # global transmit instance will be held by _xmit
 _xmit = None
@@ -31,7 +32,6 @@ g_sample_rate = 1
 g_responses = queue.Queue(maxsize=1)
 g_block_on_response = False
 
-VERSION = "1.0.2"
 transmission.VERSION = VERSION
 
 sd = statsd.StatsClient(prefix="libhoney")
@@ -190,7 +190,7 @@ class Builder(object):
            builder.'''
         self._fields.add(data)
 
-    def send_now(data):
+    def send_now(self, data):
         '''creates an event from this builder with the data passed in and sends
            it immediately. Shorthand for
            ev = builder.new_event(); ev.add(data); ev.send()'''

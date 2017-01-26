@@ -4,10 +4,8 @@ Python library for sending events to [Honeycomb](https://honeycomb.io). (See her
 
 ## Installation
 
-To install from source:
-
 ```
-python setup.py install
+pip install libhoney
 ```
 
 ## Documentation
