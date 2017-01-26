@@ -93,6 +93,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
         t.responses.put = mock.Mock()
         fakeNow = datetime.datetime(2012, 1, 1, 10, 10, 10)
         transmission.get_now = mock.MagicMock(return_value=fakeNow)
+
         with requests_mock.Mocker() as m:
             ev = FakeEvent()
             ev.writekey = "writeme"
@@ -100,7 +101,13 @@ class TestTransmissionPrivateSend(unittest.TestCase):
             ev.api_host = "http://urlme/"
             ev.metadata = "metame"
             ev.sample_rate = 3
-            m.post("http://urlme/1/events/datame", text="", status_code=200)
+            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+            m.post("http://urlme/1/events/datame",
+                text="", status_code=200,
+                request_headers={
+                    "X-Event-Time": "2013-01-01T11:11:11",
+                    "X-Honeycomb-Team": "writeme",
+                })
             t._send(ev)
             transmission.sd.incr.assert_called_with("messages_sent")
             expected_response = {
