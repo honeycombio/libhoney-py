@@ -71,8 +71,11 @@ class Transmission():
         start = get_now()
         url = urljoin(urljoin(ev.api_host, "/1/events/"), ev.dataset)
         req = requests.Request('POST', url, data=str(ev))
+        event_time = ev.created_at.isoformat()
+        if not ev.created_at.utcoffset():
+            event_time += "Z"
         req.headers.update({
-            "X-Event-Time": ev.created_at.isoformat("T"),
+            "X-Event-Time": event_time,
             "X-Honeycomb-Team": ev.writekey,
             "X-Honeycomb-SampleRate": str(ev.sample_rate)})
         preq = self.session.prepare_request(req)

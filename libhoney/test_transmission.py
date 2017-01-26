@@ -105,7 +105,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
             m.post("http://urlme/1/events/datame",
                 text="", status_code=200,
                 request_headers={
-                    "X-Event-Time": "2013-01-01T11:11:11",
+                    "X-Event-Time": "2013-01-01T11:11:11Z",
                     "X-Honeycomb-Team": "writeme",
                 })
             t._send(ev)
@@ -118,3 +118,13 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                 "error": "",
             }
             t.responses.put_nowait.assert_called_with(expected_response)
+
+            # and with subsecond precision, now
+            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11, 12345)
+            m.post("http://urlme/1/events/datame",
+                text="", status_code=200,
+                request_headers={
+                    "X-Event-Time": "2013-01-01T11:11:11.012345Z",
+                    "X-Honeycomb-Team": "writeme",
+                })
+            t._send(ev)
