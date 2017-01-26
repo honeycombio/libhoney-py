@@ -19,7 +19,6 @@ setup(name='libhoney',
           'six',
       ],
       tests_require=[
-        'funcsigs',
         'mock',
         'pbr',
         'requests-mock'
