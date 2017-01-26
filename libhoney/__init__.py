@@ -31,7 +31,7 @@ g_sample_rate = 1
 g_responses = queue.Queue(maxsize=1)
 g_block_on_response = False
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 transmission.VERSION = VERSION
 
 sd = statsd.StatsClient(prefix="libhoney")
