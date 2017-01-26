@@ -269,7 +269,9 @@ class Event(object):
     def send(self):
         '''send queues this event for transmission to Honeycomb.
         Raises a SendError exception when called with an uninitialized
-        libhoney. Will drop sampled events when samplerate > 1'''
+        libhoney. Will drop sampled events when samplerate > 1,
+        and ensure that the Honeycomb datastore correctly considers it
+        as representing `samplerate` number of similar events.'''
         global _xmit
         if _xmit is None:
             # do this in addition to below to error even when sampled
@@ -284,7 +286,9 @@ class Event(object):
     def send_presampled(self):
         '''send_presampled queues this event for transmission to Honeycomb.
         Caller is responsible for sampling logic - will not drop any events
-        for sampling.'''
+        for sampling. Defining a `samplerate` will ensure that the Honeycomb
+        datastore correctly considers it as representing `samplerate` number
+        of similar events.'''
         global _xmit
         if _xmit is None:
             raise SendError(
