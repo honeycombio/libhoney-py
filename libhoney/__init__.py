@@ -228,7 +228,7 @@ class Event(object):
         [self._fields.add_dynamic_field(fn) for fn in dyn_fields]
         self._fields += fields
         # fill in other info
-        self.created_at = datetime.datetime.now()
+        self.created_at = datetime.datetime.utcnow()
         self.writekey = g_writekey
         self.dataset = g_dataset
         self.api_host = g_api_host

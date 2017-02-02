@@ -197,6 +197,8 @@ class TestEvent(unittest.TestCase):
                 self.time = time
             def now(self):
                 return self.time
+            def utcnow(self):
+                return self.time
         fakeStart = datetime.datetime(2016, 1, 2, 3, 4, 5, 6)
         fakeEnd = fakeStart + datetime.timedelta(milliseconds=5)
         fd = fakeDate()
