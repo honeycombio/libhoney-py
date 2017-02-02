@@ -6,7 +6,7 @@ To upload a new release to PyPI:
 ```
 [distutils]
 index-servers =
-  pypitest
+  pypi
 
 [pypi]
 repository=https://pypi.python.org/pypi
