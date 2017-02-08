@@ -72,7 +72,7 @@ class Transmission():
         url = urljoin(urljoin(ev.api_host, "/1/events/"), ev.dataset)
         req = requests.Request('POST', url, data=str(ev))
         event_time = ev.created_at.isoformat()
-        if not ev.created_at.utcoffset():
+        if ev.created_at.tzinfo is None:
             event_time += "Z"
         req.headers.update({
             "X-Event-Time": event_time,
