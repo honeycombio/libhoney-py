@@ -14,7 +14,6 @@ setup(name='libhoney',
       packages=['libhoney'],
       install_requires=[
           'requests',
-          'transmission',
           'statsd',
           'six',
       ],

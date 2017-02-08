@@ -15,12 +15,12 @@ You can find an example demonstrating usage in example.py'''
 import datetime
 from contextlib import contextmanager
 import json
-import transmission
+from libhoney import transmission
 import inspect
 import statsd
 import random
 from six.moves import queue
-from .version import VERSION
+from libhoney.version import VERSION
 
 # global transmit instance will be held by _xmit
 _xmit = None

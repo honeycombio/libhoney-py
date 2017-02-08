@@ -1,7 +1,7 @@
 '''Transmission handles colleting and sending individual events to Honeycomb'''
 
 from six.moves import queue
-from urlparse import urljoin
+from six.moves.urllib.parse import urljoin
 import threading
 import requests
 import statsd

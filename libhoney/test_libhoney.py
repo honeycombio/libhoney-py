@@ -3,6 +3,7 @@
 import __init__ as libhoney
 
 import datetime
+import json
 import unittest
 import mock
 
@@ -171,7 +172,7 @@ class TestBuilder(unittest.TestCase):
         ev.add_field("3", "c")
         self.assertNotEqual(b._fields, ev._fields)
         # move to event testing when written
-        self.assertEqual(str(ev), '''{"a": 1, "3": "c", "b": 3}''')
+        self.assertEqual(json.loads(str(ev)), {"a": 1, "3": "c", "b": 3})
 
     def test_clone_builder(self):
         b = libhoney.Builder()
@@ -218,20 +219,24 @@ class TestEvent(unittest.TestCase):
         ev = libhoney.Event()
         with self.assertRaises(libhoney.SendError) as c1:
             ev.send()
-        self.assertTrue("No metrics added to event. Won't send empty event." in c1.exception)
+        self.assertTrue("No metrics added to event. Won't send empty event." in
+                        str(c1.exception))
         ev = libhoney.Event()
         ev.add_field("f", "g")
         with self.assertRaises(libhoney.SendError) as c2:
             ev.send()
-        self.assertTrue("No APIHost for Honeycomb. Can't send to the Great Unknown." in c2.exception)
+        self.assertTrue("No APIHost for Honeycomb. Can't send to the Great Unknown."
+                        in str(c2.exception))
         ev.api_host = "myhost"
         with self.assertRaises(libhoney.SendError) as c2:
             ev.send()
-        self.assertTrue("No WriteKey specified. Can't send event." in c2.exception)
+        self.assertTrue("No WriteKey specified. Can't send event." in
+                        str(c2.exception))
         ev.writekey = "letmewrite"
         with self.assertRaises(libhoney.SendError) as c2:
             ev.send()
-        self.assertTrue("No Dataset for Honeycomb. Can't send datasetless." in c2.exception)
+        self.assertTrue("No Dataset for Honeycomb. Can't send datasetless." in
+                        str(c2.exception))
         ev.dataset = "storeme"
         ev.send()
         libhoney._xmit.send.assert_called_with(ev)
