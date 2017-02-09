@@ -4,3 +4,11 @@ python:
   - "3.5"
   - "3.6"
 script: python setup.py test
+deploy:
+  provider: pypi
+  user: honeycomb
+  password:
+    secure: ikc4R/Man6RU6gFz3g8eIY8t1lGjrm7cxWP8UQGx2HdcW/cV7EsrzrLvpU5EU7yztkkf2s4YLEx7fcQAq0vZqwaXIYglj27l5Eo/elk6R7YvR0R335+jGNeESGwPIi5s+mOiyBxmsJVR5JPXE2y5OrNQlHnM/l+x8a8yAZqPQrG75ogYFZFIlM4ObujBqM3ojLHrLKSPuYe+5Pm0foTBhm62oTGMvwduMdN8Yjw3qQDMNtt7nvtqEh9K8BLNCSbLq53gzQMkCrC6qOjIGzD5GR+NO+hhBK+wLa0wJ4W8eOm2E9JMPklc6zctPU5pWK90rHyiqd8NNvK+xdNUfyHbdoZ70i0qvN+zjCZseXdargA36Lv/dn0ttahki1uTBCwaAp8dC5PhN5cM7+CKZSjE4i/A3P5QNo5/3JVpWrqiELlBq1MNsmIR11J0ni3KF4jKydCCTgpkGJo0ppTEukEitgDah5Fc30dVwevoN2Mu+0wYyJrZnr2W8EDMfNkFrj99+qHp33bzGcbBdrrjoSJuhhK7jRjN0/HbMPYMyr4Qh/TISzvw1zrL5g1PntTFcvDKPDA8SglrvJJwFaYxrQDJ5UnUnXHGsgKu9FV1id7z8g1NlX3esru/m6g+bxupjP2uBCc4nu/4yIiiwncAbLE1Vq/7elzgSp9pULDYmdjG/yA=
+  on:
+    tags: true
+    repo: honeycombio/libhoney-py

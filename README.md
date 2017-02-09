@@ -42,3 +42,11 @@ open issues or a pull request with your change. Remember to add your name to the
 CONTRIBUTORS file!
 
 All contributions will be released under the Apache License 2.0.
+
+## Releases
+To release a new version, run
+```
+bumpversion [major|minor|patch]
+git push --tags
+```
+After a successful build, a new version will be automatically uploaded to PyPI.
