@@ -20,7 +20,8 @@ setup(name='libhoney',
       tests_require=[
         'mock',
         'pbr',
-        'requests-mock'
+        'requests-mock',
+        'bumpversion'
       ],
       test_suite='libhoney',
       zip_safe=False)

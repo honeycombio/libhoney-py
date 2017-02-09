@@ -42,3 +42,13 @@ open issues or a pull request with your change. Remember to add your name to the
 CONTRIBUTORS file!
 
 All contributions will be released under the Apache License 2.0.
+
+## Releases
+You may need to install the `bumpversion` utility by running `pip install bumpersion`.
+
+To release a new version, run
+```
+bumpversion [major|minor|patch]
+git push --tags
+```
+After a successful build, a new version will automatically be uploaded to PyPI.
