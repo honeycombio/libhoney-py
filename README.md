@@ -10,7 +10,7 @@ pip install libhoney
 
 ## Documentation
 
-A pydoc API reference is available at https://honeycomb.io/docs/send-data/sdks/python/
+An API reference is available at https://honeycombio.github.io/libhoney-py/
 
 ## Example
 
