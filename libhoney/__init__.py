@@ -106,7 +106,11 @@ def send_now(data):
 def close():
     '''wait for in-flight events to be transmitted then shut down cleanly'''
     global _xmit
-    _xmit.close()
+
+    # if libhoney was never initialized, don't try to close it
+    if _xmit:
+        _xmit.close()
+
     # we should error on post-close sends
     _xmit = None
 
