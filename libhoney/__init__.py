@@ -298,13 +298,13 @@ class Event(object):
                 "No metrics added to event. Won't send empty event.")
         if self.api_host == "":
             raise SendError(
-                "No APIHost for Honeycomb. Can't send to the Great Unknown.")
+                "No api_host for Honeycomb. Can't send to the Great Unknown.")
         if self.writekey == "":
             raise SendError(
-                "No WriteKey specified. Can't send event.")
+                "No write_key specified. Can't send event.")
         if self.dataset == "":
             raise SendError(
-                "No Dataset for Honeycomb. Can't send datasetless.")
+                "No dataset for Honeycomb. Can't send event without knowing which dataset it belongs to.")
         _xmit.send(self)
 
     def __str__(self):

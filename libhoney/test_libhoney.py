@@ -225,17 +225,17 @@ class TestEvent(unittest.TestCase):
         ev.add_field("f", "g")
         with self.assertRaises(libhoney.SendError) as c2:
             ev.send()
-        self.assertTrue("No APIHost for Honeycomb. Can't send to the Great Unknown."
+        self.assertTrue("No api_host for Honeycomb."
                         in str(c2.exception))
         ev.api_host = "myhost"
         with self.assertRaises(libhoney.SendError) as c2:
             ev.send()
-        self.assertTrue("No WriteKey specified. Can't send event." in
+        self.assertTrue("No write_key specified." in
                         str(c2.exception))
         ev.writekey = "letmewrite"
         with self.assertRaises(libhoney.SendError) as c2:
             ev.send()
-        self.assertTrue("No Dataset for Honeycomb. Can't send datasetless." in
+        self.assertTrue("No dataset for Honeycomb." in
                         str(c2.exception))
         ev.dataset = "storeme"
         ev.send()
