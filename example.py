@@ -1,7 +1,6 @@
 '''This example shows how to use some of the features of libhoney in python'''
 
 import libhoney
-import signal
 import threading
 
 writekey = "abcabc123123defdef456456"
@@ -47,19 +46,11 @@ def read_responses(resp_queue):
         print status
 
 
-def graceful_shutdown(signum, frame):
-    libhoney.close()
-
-
 if __name__ == "__main__":
     libhoney.init(writekey=writekey, dataset=dataset, max_concurrent_batches=1)
     resps = libhoney.responses()
     t = threading.Thread(target=read_responses, args=(resps,))
     t.start()
-
-    # shut down gracefully
-    signal.signal(signal.SIGINT, graceful_shutdown)
-    signal.signal(signal.SIGTERM, graceful_shutdown)
 
     # attach fields to top-level instance
     libhoney.add_field("version", "3.4.5")
