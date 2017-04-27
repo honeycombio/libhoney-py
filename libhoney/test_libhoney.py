@@ -48,6 +48,16 @@ class TestGlobalScope(unittest.TestCase):
         mock_xmit.close.assert_called_with()
         self.assertEqual(libhoney._xmit, None)
 
+    def test_close_noop_if_not_init(self):
+        """
+        libhoney.close() should noop if never initialized
+        """
+        try:
+            libhoney.close()
+        except AttributeError:
+            self.fail('libhoney threw an exception on '
+                           'an uninitialized close.')
+
     def test_add_field(self):
         ed = {"whomp": True}
         libhoney.add_field("whomp", True)
