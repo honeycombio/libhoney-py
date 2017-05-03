@@ -4,7 +4,6 @@ from six.moves import queue
 from six.moves.urllib.parse import urljoin
 import threading
 import requests
-import signal
 import statsd
 import datetime
 
@@ -34,9 +33,6 @@ class Transmission():
             t = threading.Thread(target=self._sender)
             t.start()
             self.threads.append(t)
-        # shut down gracefully
-        signal.signal(signal.SIGINT, self.caught_signal)
-        signal.signal(signal.SIGTERM, self.caught_signal)
 
     def send(self, ev):
         '''send accepts an event and queues it to be sent'''
@@ -113,9 +109,6 @@ class Transmission():
             t.join()
         # signal to the responses queue that nothing more is coming.
         self.responses.put(None)
-
-    def caught_signal(self, signum, frame):
-        self.close()
 
     def get_response_queue(self):
         ''' return the responses queue on to which will be sent the response
