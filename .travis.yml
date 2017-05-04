@@ -1,8 +1,8 @@
 language: python
 python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
+- '2.7'
+- '3.5'
+- '3.6'
 script: python setup.py test
 deploy:
   provider: pypi
@@ -12,3 +12,8 @@ deploy:
   on:
     tags: true
     repo: honeycombio/libhoney-py
+after_deploy:
+- ./push_docs.sh
+env:
+  global:
+    secure: gXCmyIsFGK/c/UNYAgJtfFBJJk7Sfx0AYqbPpk3jTKxoAjhS32qqXBjHTJ5/xfO7afLwZpQznywR6oshpSbJZzFttVCI+Kel7P3EguwGRmHjHOuV8rUHsq6256pP3sqaf9rOu5r1jGX4JN8oPn6h8KGUhcGGErDvAETPliNppNK3GxLFUG4w8hfXnhYICuebYgLQPwu9Gaks3pPc34wcoDxHbL5bxpGGGh1vl4mLNx2XALTf8Nv0Xze2M+pcyUg3TFlErJHE6XD5a/ZgSGE31uSh3+FDKHvELhjCTHtldr+9BKqDGh5XDNzicLNugA3c+L46Tm99daGzJv2KGf1s4kJssKnwYbV00m6Gn9uTS5DLJblv7EXBRQwOGhdPZJ/bFxFo+eY1q3haKSe6zYGL5JsqtPMxev4+gCrrTPVSCFcfWG97jeHXsJb6eRouzxgWKzTB8ZF92dk8eqpQn3vNZpJ3BtaEExQ7mEzquuO02Dqf+JEwNtCauB/qkBHh9aD34U05JrWzGawG6o5iPRsQbJEogO/P3w2SMDqpmi6joC1P7L21YUrJ5SEHvSp5Bd3p1wN7ZrXHFvv5d/I03YSlLArmR1U6v0rY+9QZ6lP17RaGBc6FFUjZ2tBVdD7FOPH+/cchYPQSYvKiiqYm0viIMaamN8wMwemncTPg8kLIUfs= # contains GH_TOKEN for push_docs
