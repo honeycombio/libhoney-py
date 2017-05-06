@@ -1,6 +1,6 @@
 # libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-py.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-py) [![PyPi version](https://badge.fury.io/py/libhoney.svg)](https://badge.fury.io/py/libhoney)
 
-Python library for sending events to [Honeycomb](https://honeycomb.io). (For more information, see the [documentation](https://honeycomb.io/intro/) and [Python SDK guide](https://honeycomb.io/docs/connect/python).)
+Python library for sending events to [Honeycomb](https://honeycomb.io). (For more information, see the [documentation](https://honeycomb.io/docs) and [Python SDK guide](https://honeycomb.io/docs/connect/python).)
 
 ## Installation
 
