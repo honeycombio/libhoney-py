@@ -223,6 +223,21 @@ class TestEvent(unittest.TestCase):
         self.assertEqual(ev.created_at, fakeStart)
         libhoney.datetime.datetime = real_datetime
 
+    def test_str(self):
+        ev = libhoney.Event()
+        ev.add_field("obj", { "a": 1, "b": 2 })
+        ev.add_field("string", "a:1")
+        ev.add_field("number", 5)
+        ev.add_field("boolean", True)
+        ev.add_field("null", None)
+
+        serialized = str(ev)
+        self.assertTrue('"obj": {"a": 1, "b": 2}' in serialized)
+        self.assertTrue('"string": "a:1"' in serialized)
+        self.assertTrue('"number": 5' in serialized)
+        self.assertTrue('"boolean": true' in serialized)
+        self.assertTrue('"null": null' in serialized)
+
     def test_send(self):
         libhoney._xmit = mock.MagicMock()
 
