@@ -39,6 +39,7 @@ class TestTransmissionInit(unittest.TestCase):
 class FakeEvent():
     def __init__(self):
         self.created_at = datetime.datetime.now()
+        self.metadata = dict()
 
 
 class TestTransmissionSend(unittest.TestCase):
@@ -81,6 +82,21 @@ class TestTransmissionSend(unittest.TestCase):
             "metadata": None, "body": "",
             "error": "event dropped; queue overflow",
         })
+
+
+class TestTransmissionQueueOverflow(unittest.TestCase):
+    def test_send(self):
+        transmission.sd = mock.Mock()
+        ft = FakeThread()
+        transmission.threading.Thread = mock.Mock(return_value=ft)
+        t = transmission.Transmission()
+        t.pending = queue.Queue(maxsize=2)
+        t.responses = queue.Queue(maxsize=1)
+
+        t.send(FakeEvent())
+        t.send(FakeEvent())
+        t.send(FakeEvent()) # should overflow sending and land on response
+        t.send(FakeEvent()) # shouldn't throw exception when response is full
 
 
 class TestTransmissionPrivateSend(unittest.TestCase):
