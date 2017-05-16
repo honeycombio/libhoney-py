@@ -54,7 +54,12 @@ class Transmission():
             if self.block_on_response:
                 self.responses.put(response)
             else:
-                self.responses.put_nowait(response)
+                try:
+                    self.responses.put_nowait(response)
+                except queue.Full:
+                    # if the response queue is full when trying to add an event
+                    # queue is full response, just skip it.
+                    pass
             sd.incr("queue_overflow")
 
     def _sender(self):
@@ -92,23 +97,29 @@ class Transmission():
             "body": resp.text,
             "error": "",
         }
-        try:
-            if self.block_on_response:
-                self.responses.put(response)
-            else:
+        if self.block_on_response:
+            self.responses.put(response)
+        else:
+            try:
                 self.responses.put_nowait(response)
-        except queue.Full:
-            pass
+            except queue.Full:
+                pass
 
     def close(self):
         '''call close to send all in-flight requests and shut down the
            senders nicely'''
         for i in range(self.max_concurrent_batches):
-            self.pending.put(None)
+            try:
+                self.pending.put(None, true, 10)
+            except queue.Full:
+                pass
         for t in self.threads:
             t.join()
         # signal to the responses queue that nothing more is coming.
-        self.responses.put(None)
+        try:
+            self.responses.put(None, true, 10)
+        except queue.Full:
+            pass
 
     def get_response_queue(self):
         ''' return the responses queue on to which will be sent the response
