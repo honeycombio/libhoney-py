@@ -107,14 +107,15 @@ class Transmission():
 
     def close(self):
         '''call close to send all in-flight requests and shut down the
-           senders nicely'''
+            senders nicely. Times out after max 20 seconds per sending thread
+            plus 10 seconds for the response queue'''
         for i in range(self.max_concurrent_batches):
             try:
                 self.pending.put(None, true, 10)
             except queue.Full:
                 pass
         for t in self.threads:
-            t.join()
+            t.join(10)
         # signal to the responses queue that nothing more is coming.
         try:
             self.responses.put(None, true, 10)
