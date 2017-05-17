@@ -3,6 +3,7 @@ python:
 - '2.7'
 - '3.5'
 - '3.6'
+install: pip install pylint==1.6.4
 script: pylint --disable=all --enable=E --disable=no-member libhoney && python setup.py test
 deploy:
   provider: pypi
