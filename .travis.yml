@@ -3,7 +3,8 @@ python:
 - '2.7'
 - '3.5'
 - '3.6'
-script: python setup.py test
+install: pip install pyflakes==1.5.0
+script: pyflakes libhoney && python setup.py test
 deploy:
   provider: pypi
   user: honeycomb
