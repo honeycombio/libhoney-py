@@ -3,7 +3,7 @@ python:
 - '2.7'
 - '3.5'
 - '3.6'
-script: python setup.py test
+script: pylint --disable=all --enable=E --disable=no-member libhoney && python setup.py test
 deploy:
   provider: pypi
   user: honeycomb
