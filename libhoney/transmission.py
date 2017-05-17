@@ -111,14 +111,14 @@ class Transmission():
             plus 10 seconds for the response queue'''
         for i in range(self.max_concurrent_batches):
             try:
-                self.pending.put(None, true, 10)
+                self.pending.put(None, True, 10)
             except queue.Full:
                 pass
         for t in self.threads:
             t.join(10)
         # signal to the responses queue that nothing more is coming.
         try:
-            self.responses.put(None, true, 10)
+            self.responses.put(None, True, 10)
         except queue.Full:
             pass
 
