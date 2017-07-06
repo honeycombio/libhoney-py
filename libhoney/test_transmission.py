@@ -5,6 +5,7 @@ import transmission
 import mock
 import unittest
 import requests_mock
+import requests
 import datetime
 from six.moves import queue
 
@@ -144,3 +145,26 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                     "X-Honeycomb-Team": "writeme",
                 })
             t._send(ev)
+            expected_response = {
+                "status_code": 200,
+                "duration": 0,
+                "metadata": ev.metadata,
+                "body": "",
+                "error": "",
+            }
+            t.responses.put_nowait.assert_called_with(expected_response)
+
+            # see that an exception thrown by requests is caught and a response
+            # created
+            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11, 12345)
+            m.post("http://urlme/1/events/datame",
+                exc=requests.exceptions.SSLError)
+            t._send(ev)
+            expected_response = {
+                "status_code": 0,
+                "duration": 0,
+                "metadata": ev.metadata,
+                "body": "",
+                "error": "SSLError()",
+            }
+            t.responses.put_nowait.assert_called_with(expected_response)
