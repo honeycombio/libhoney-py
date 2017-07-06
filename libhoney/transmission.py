@@ -74,43 +74,41 @@ class Transmission():
         '''_send should only be called from sender and sends an individual
             event to Honeycomb'''
         start = get_now()
-        url = urljoin(urljoin(ev.api_host, "/1/events/"), ev.dataset)
-        req = requests.Request('POST', url, data=str(ev))
-        event_time = ev.created_at.isoformat()
-        if ev.created_at.tzinfo is None:
-            event_time += "Z"
-        req.headers.update({
-            "X-Event-Time": event_time,
-            "X-Honeycomb-Team": ev.writekey,
-            "X-Honeycomb-SampleRate": str(ev.sample_rate)})
-        preq = self.session.prepare_request(req)
         try:
+            url = urljoin(urljoin(ev.api_host, "/1/events/"), ev.dataset)
+            req = requests.Request('POST', url, data=str(ev))
+            event_time = ev.created_at.isoformat()
+            if ev.created_at.tzinfo is None:
+                event_time += "Z"
+            req.headers.update({
+                "X-Event-Time": event_time,
+                "X-Honeycomb-Team": ev.writekey,
+                "X-Honeycomb-SampleRate": str(ev.sample_rate)})
+            preq = self.session.prepare_request(req)
             resp = self.session.send(preq)
             if (resp.status_code == 200):
                 sd.incr("messages_sent")
             else:
                 sd.incr("send_errors")
-            dur = get_now() - start
             response = {
                 "status_code": resp.status_code,
-                "duration": dur.total_seconds() * 1000,  # report in milliseconds
-                "metadata": ev.metadata,
                 "body": resp.text,
                 "error": "",
             }
-        except requests.exceptions.ConnectionError as e:
-            # sometimes the ELB returns SSL issues for no good reason.
-            # catch these and push back a broken response so the event can be
-            # properly handled by the calling code
-            dur = get_now() - start
+        except Exception as e:
+            # Sometimes the ELB returns SSL issues for no good reason. Sometimes
+            # Honeycomb will timeout. We shouldn't influence the calling app's
+            # stack, so catch these and hand them to the responses queue.
             sd.incr("send_errors")
             response = {
                 "status_code": 0,
-                "duration": dur.total_seconds() * 1000,  # report in milliseconds
-                "metadata": ev.metadata,
                 "body": "",
                 "error": repr(e),
             }
+        finally:
+            dur = get_now() - start
+            response["duration"] = dur.total_seconds() * 1000  # report in milliseconds
+            response["metadata"] = ev.metadata
         if self.block_on_response:
             self.responses.put(response)
         else:
