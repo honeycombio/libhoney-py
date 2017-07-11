@@ -12,6 +12,7 @@ exception.
 
 You can find an example demonstrating usage in example.py'''
 
+import atexit
 import datetime
 from contextlib import contextmanager
 import json
@@ -113,6 +114,9 @@ def close():
 
     # we should error on post-close sends
     _xmit = None
+
+
+atexit.register(close) # safe because it's a no-op unless init() was called
 
 
 class FieldHolder:
