@@ -5,7 +5,7 @@ Basic usage:
 * initialize libhoney with your Honeycomb writekey and dataset name
 * create an event object and populate it with fields
 * send the event object
-* close libhoney when your program is finished
+* libhoney will close automatically when your program is finished
 
 Sending on a closed or uninitialized libhoney will throw a libhoney.SendError
 exception.
@@ -105,7 +105,10 @@ def send_now(data):
 
 
 def close():
-    '''wait for in-flight events to be transmitted then shut down cleanly'''
+    '''Wait for in-flight events to be transmitted then shut down cleanly.
+       Optional (will be called automatically at exit) unless your
+       application is consuming from the responses queue and needs to know
+       when all responses have been received.'''
     global _xmit
 
     # if libhoney was never initialized, don't try to close it

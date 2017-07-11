@@ -28,9 +28,6 @@ libhoney.send_now({
   "hostname": "appserver15",
   "payload_length": 27
 })
-
-# Call close to flush any pending calls to Honeycomb
-libhoney.close()
 ```
 
 You can find a more complete example demonstrating usage in [`example.py`](example.py)
