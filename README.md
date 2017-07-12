@@ -41,7 +41,7 @@ CONTRIBUTORS file!
 All contributions will be released under the Apache License 2.0.
 
 ## Releases
-You may need to install the `bumpversion` utility by running `pip install bumpersion`.
+You may need to install the `bumpversion` utility by running `pip install bumpversion`.
 
 To release a new version, run
 ```
