@@ -31,6 +31,7 @@ class Transmission():
         self.threads = []
         for i in range(self.max_concurrent_batches):
             t = threading.Thread(target=self._sender)
+            t.daemon = True
             t.start()
             self.threads.append(t)
 
