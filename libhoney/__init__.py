@@ -18,7 +18,6 @@ from contextlib import contextmanager
 import json
 from libhoney import transmission
 import inspect
-import statsd
 import random
 from six.moves import queue
 from libhoney.version import VERSION
@@ -34,8 +33,6 @@ g_responses = queue.Queue(maxsize=1)
 g_block_on_response = False
 
 transmission.VERSION = VERSION
-
-sd = statsd.StatsClient(prefix="libhoney")
 
 random.seed()
 
@@ -289,7 +286,6 @@ class Event(object):
             raise SendError(
                 "Tried to send on a closed or uninitialized libhoney")
         if _should_drop(self.sample_rate):
-            sd.incr("sampled")
             _send_dropped_response(self)
             return
         self.send_presampled()
