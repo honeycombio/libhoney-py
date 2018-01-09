@@ -7,7 +7,6 @@ import requests
 import statsd
 import datetime
 
-sd = statsd.StatsClient(prefix="libhoney")
 VERSION = "unset"  # set by libhoney
 
 
@@ -35,15 +34,17 @@ class Transmission():
             t.start()
             self.threads.append(t)
 
+        self.sd = statsd.StatsClient(prefix="libhoney")
+
     def send(self, ev):
         '''send accepts an event and queues it to be sent'''
-        sd.gauge("queue_length", self.pending.qsize())
+        self.sd.gauge("queue_length", self.pending.qsize())
         try:
             if self.block_on_send:
                 self.pending.put(ev)
             else:
                 self.pending.put_nowait(ev)
-            sd.incr("messages_queued")
+            self.sd.incr("messages_queued")
         except queue.Full:
             response = {
                 "status_code": 0,
@@ -61,7 +62,7 @@ class Transmission():
                     # if the response queue is full when trying to add an event
                     # queue is full response, just skip it.
                     pass
-            sd.incr("queue_overflow")
+            self.sd.incr("queue_overflow")
 
     def _sender(self):
         '''_sender is the control loop for each sending thread'''
@@ -88,9 +89,9 @@ class Transmission():
             preq = self.session.prepare_request(req)
             resp = self.session.send(preq)
             if (resp.status_code == 200):
-                sd.incr("messages_sent")
+                self.sd.incr("messages_sent")
             else:
-                sd.incr("send_errors")
+                self.sd.incr("send_errors")
             response = {
                 "status_code": resp.status_code,
                 "body": resp.text,
@@ -100,7 +101,7 @@ class Transmission():
             # Sometimes the ELB returns SSL issues for no good reason. Sometimes
             # Honeycomb will timeout. We shouldn't influence the calling app's
             # stack, so catch these and hand them to the responses queue.
-            sd.incr("send_errors")
+            self.sd.incr("send_errors")
             response = {
                 "status_code": 0,
                 "body": "",

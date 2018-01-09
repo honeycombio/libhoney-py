@@ -45,10 +45,10 @@ class FakeEvent():
 
 class TestTransmissionSend(unittest.TestCase):
     def test_send(self):
-        transmission.sd = mock.Mock()
         ft = FakeThread()
         transmission.threading.Thread = mock.Mock(return_value=ft)
         t = transmission.Transmission()
+        t.sd = mock.Mock()
         qsize = 4
         t.pending.qsize = mock.Mock(return_value=qsize)
         t.pending.put = mock.Mock()
@@ -59,25 +59,25 @@ class TestTransmissionSend(unittest.TestCase):
         ev = FakeEvent()
         ev.metadata = None
         t.send(ev)
-        transmission.sd.gauge.assert_called_with("queue_length", 4)
+        t.sd.gauge.assert_called_with("queue_length", 4)
         t.pending.put_nowait.assert_called_with(ev)
         t.pending.put.assert_not_called()
-        transmission.sd.incr.assert_called_with("messages_queued")
+        t.sd.incr.assert_called_with("messages_queued")
         t.pending.put.reset_mock()
         t.pending.put_nowait.reset_mock()
-        transmission.sd.reset_mock()
+        t.sd.reset_mock()
         # put an event blocking
         t.block_on_send = True
         t.send(ev)
         t.pending.put.assert_called_with(ev)
         t.pending.put_nowait.assert_not_called()
-        transmission.sd.incr.assert_called_with("messages_queued")
-        transmission.sd.reset_mock()
+        t.sd.incr.assert_called_with("messages_queued")
+        t.sd.reset_mock()
         # put an event non-blocking queue full
         t.block_on_send = False
         t.pending.put_nowait = mock.Mock(side_effect=queue.Full())
         t.send(ev)
-        transmission.sd.incr.assert_called_with("queue_overflow")
+        t.sd.incr.assert_called_with("queue_overflow")
         t.responses.put_nowait.assert_called_with({
             "status_code": 0, "duration": 0,
             "metadata": None, "body": "",
@@ -87,7 +87,6 @@ class TestTransmissionSend(unittest.TestCase):
 
 class TestTransmissionQueueOverflow(unittest.TestCase):
     def test_send(self):
-        transmission.sd = mock.Mock()
         ft = FakeThread()
         transmission.threading.Thread = mock.Mock(return_value=ft)
         t = transmission.Transmission()
@@ -102,10 +101,10 @@ class TestTransmissionQueueOverflow(unittest.TestCase):
 
 class TestTransmissionPrivateSend(unittest.TestCase):
     def test_send(self):
-        transmission.sd = mock.Mock()
         ft = FakeThread()
         transmission.threading.Thread = mock.Mock(return_value=ft)
         t = transmission.Transmission()
+        t.sd = mock.Mock()
         t.responses.put_nowait = mock.Mock()
         t.responses.put = mock.Mock()
         fakeNow = datetime.datetime(2012, 1, 1, 10, 10, 10)
@@ -126,7 +125,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                     "X-Honeycomb-Team": "writeme",
                 })
             t._send(ev)
-            transmission.sd.incr.assert_called_with("messages_sent")
+            t.sd.incr.assert_called_with("messages_sent")
             expected_response = {
                 "status_code": 200,
                 "duration": 0,
