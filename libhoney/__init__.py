@@ -2,12 +2,13 @@
 your python application.
 
 Basic usage:
-* initialize libhoney with your Honeycomb writekey and dataset name
-* create an event object and populate it with fields
-* send the event object
-* libhoney will close automatically when your program is finished
 
-Sending on a closed or uninitialized libhoney will throw a libhoney.SendError
+- initialize libhoney with your Honeycomb writekey and dataset name
+- create an event object and populate it with fields
+- send the event object
+- close libhoney when your program is finished
+
+Sending on a closed or uninitialized libhoney will throw a `libhoney.SendError`
 exception.
 
 You can find an example demonstrating usage in example.py'''
@@ -47,6 +48,9 @@ def init(writekey="", dataset="", sample_rate=1,
     `libhoney.init()` in order to ensure correct enqueueing + processing of
     events on the spawned threads.
 
+
+    Args:
+
     - `writekey`: the authorization key for your team on Honeycomb. Find your team
             write key at [https://ui.honeycomb.io/account](https://ui.honeycomb.io/account)
     - `dataset`: the name of the default dataset to which to write
@@ -55,7 +59,26 @@ def init(writekey="", dataset="", sample_rate=1,
     - `block_on_send`: if true, block when send queue fills. If false, drop
             events until there's room in the queue
     - `block_on_response`: if true, block when the response queue fills. If
-            false, drop response objects.'''
+            false, drop response objects.
+
+    --------
+
+    **Configuration recommendations**:
+
+    **For gunicorn**, use a [`post_worker_init` config hook](http://docs.gunicorn.org/en/stable/settings.html#post-worker-init) to initialize Honeycomb:
+
+        # conf.py
+        import logging
+        import os
+
+        def post_worker_init(worker):
+            logging.info(f'libhoney initialization in process pid {os.getpid()}')
+            libhoney.init(writekey="YOUR_WRITE_KEY", dataset="dataset_name")
+
+    Then start gunicorn with the `-c` option:
+
+        gunicorn -c /path/to/conf.py
+    '''
     global _xmit, g_writekey, g_dataset, g_api_host, g_sample_rate, g_responses
     global g_block_on_response
     _xmit = transmission.Transmission(max_concurrent_batches, block_on_send,
@@ -104,7 +127,12 @@ def add(data):
 def send_now(data):
     '''creates an event with the data passed in and sends it immediately.
 
-       Shorthand for: `ev = Event(); ev.add(data); ev.send()`'''
+    Shorthand for:
+
+        ev = Event()
+        ev.add(data)
+        ev.send()
+   '''
     ev = Event()
     ev.add(data)
     ev.send()
@@ -272,13 +300,11 @@ class Event(object):
     def timer(self, name):
         '''timer is a context for timing (in milliseconds) a function call.
 
-           example:
+        Example:
 
-           `ev = Event()`
-
-           `with ev.timer("database_dur_ms"):`
-
-             `do_database_work()`
+            ev = Event()
+            with ev.timer("database_dur_ms"):
+                do_database_work()
 
            will add a field (name, duration) indicating how long it took to run
            do_database_work()'''
