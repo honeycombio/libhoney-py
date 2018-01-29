@@ -2,12 +2,13 @@
 your python application.
 
 Basic usage:
-* initialize libhoney with your Honeycomb writekey and dataset name
-* create an event object and populate it with fields
-* send the event object
-* libhoney will close automatically when your program is finished
 
-Sending on a closed or uninitialized libhoney will throw a libhoney.SendError
+- initialize libhoney with your Honeycomb writekey and dataset name
+- create an event object and populate it with fields
+- send the event object
+- close libhoney when your program is finished
+
+Sending on a closed or uninitialized libhoney will throw a `libhoney.SendError`
 exception.
 
 You can find an example demonstrating usage in example.py'''
@@ -40,16 +41,44 @@ random.seed()
 def init(writekey="", dataset="", sample_rate=1,
          api_host="https://api.honeycomb.io", max_concurrent_batches=10,
          block_on_send=False, block_on_response=False):
-    '''initialize libhoney and prepare it to send events to Honeycomb
-    writekey: the authorization key for your team on Honeycomb. Find your team
-        write key at https://ui.honeycomb.io/account
-    dataset: the name of the default dataset to which to write
-    sample_rate: the default sample rate. 1 / sample_rate events will be sent.
-    max_concurrent_batches: the number of threads to spin up to send events
-    block_on_send: if true, block when send queue fills. If false, drop
-        events until there's room in the queue
-    block_on_response: if true, block when the response queue fills. if
-        false, drop response objects.'''
+    '''Initialize libhoney and prepare it to send events to Honeycomb.
+
+    Note that libhoney initialization initializes a number of threads to handle
+    sending payloads to Honeycomb. Be mindful of where you're calling
+    `libhoney.init()` in order to ensure correct enqueueing + processing of
+    events on the spawned threads.
+
+
+    Args:
+
+    - `writekey`: the authorization key for your team on Honeycomb. Find your team
+            write key at [https://ui.honeycomb.io/account](https://ui.honeycomb.io/account)
+    - `dataset`: the name of the default dataset to which to write
+    - `sample_rate`: the default sample rate. 1 / `sample_rate` events will be sent.
+    - `max_concurrent_batches`: the number of threads to spin up to send events
+    - `block_on_send`: if true, block when send queue fills. If false, drop
+            events until there's room in the queue
+    - `block_on_response`: if true, block when the response queue fills. If
+            false, drop response objects.
+
+    --------
+
+    **Configuration recommendations**:
+
+    **For gunicorn**, use a [`post_worker_init` config hook](http://docs.gunicorn.org/en/stable/settings.html#post-worker-init) to initialize Honeycomb:
+
+        # conf.py
+        import logging
+        import os
+
+        def post_worker_init(worker):
+            logging.info(f'libhoney initialization in process pid {os.getpid()}')
+            libhoney.init(writekey="YOUR_WRITE_KEY", dataset="dataset_name")
+
+    Then start gunicorn with the `-c` option:
+
+        gunicorn -c /path/to/conf.py
+    '''
     global _xmit, g_writekey, g_dataset, g_api_host, g_sample_rate, g_responses
     global g_block_on_response
     _xmit = transmission.Transmission(max_concurrent_batches, block_on_send,
@@ -63,13 +92,15 @@ def init(writekey="", dataset="", sample_rate=1,
 
 
 def responses():
-    '''returns a queue from which you can read a record of response info from
+    '''Returns a queue from which you can read a record of response info from
     each event sent. Responses will be dicts with the following keys:
-    * status_code - the HTTP response from the api (eg. 200 or 503)
-    * duration - how long it took to POST this event to the api, in ms
-    * metadata - pass through the metadata you added on the initial event
-    * body - the content returned by API (will be empty on success)
-    * error - in an error condition, this is filled with the error message
+
+    - `status_code` - the HTTP response from the api (eg. 200 or 503)
+    - `duration` - how long it took to POST this event to the api, in ms
+    - `metadata` - pass through the metadata you added on the initial event
+    - `body` - the content returned by API (will be empty on success)
+    - `error` - in an error condition, this is filled with the error message
+
     When a None object appears on the queue the reader should exit'''
     global g_responses
     return g_responses
@@ -95,7 +126,13 @@ def add(data):
 
 def send_now(data):
     '''creates an event with the data passed in and sends it immediately.
-       Shorthand for ev = Event(); ev.add(data); ev.send()'''
+
+    Shorthand for:
+
+        ev = Event()
+        ev.add(data)
+        ev.send()
+   '''
     ev = Event()
     ev.add(data)
     ev.send()
@@ -171,7 +208,7 @@ _fields = FieldHolder()
 
 class Builder(object):
     '''A Builder is a scoped object to which you can add fields and dynamic
-       fields.  Events created from this builder will inherit all fields
+       fields. Events created from this builder will inherit all fields
        and dynamic fields from this builder and the global environment'''
 
     def __init__(self, data={}, dyn_fields=[], fields=FieldHolder()):
@@ -188,7 +225,7 @@ class Builder(object):
         self._fields.add_field(name, val)
 
     def add_dynamic_field(self, fn):
-        '''add_dynamic_field adds a function to the builder. When you create an
+        '''`add_dynamic_field` adds a function to the builder. When you create an
            event from this builder, the function will be executed. The function
            name is the key and it should return one value.'''
         self._fields.add_dynamic_field(fn)
@@ -201,7 +238,7 @@ class Builder(object):
     def send_now(self, data):
         '''creates an event from this builder with the data passed in and sends
            it immediately. Shorthand for
-           ev = builder.new_event(); ev.add(data); ev.send()'''
+           `ev = builder.new_event(); ev.add(data); ev.send()`'''
         ev = self.new_event()
         ev.add(data)
         ev.send()
@@ -262,10 +299,13 @@ class Event(object):
     @contextmanager
     def timer(self, name):
         '''timer is a context for timing (in milliseconds) a function call.
-           example:
-           ev = Event()
-           with ev.timer("database_dur_ms"):
-             do_database_work()
+
+        Example:
+
+            ev = Event()
+            with ev.timer("database_dur_ms"):
+                do_database_work()
+
            will add a field (name, duration) indicating how long it took to run
            do_database_work()'''
         start = datetime.datetime.now()
@@ -276,6 +316,7 @@ class Event(object):
 
     def send(self):
         '''send queues this event for transmission to Honeycomb.
+
         Raises a SendError exception when called with an uninitialized
         libhoney. Will drop sampled events when samplerate > 1,
         and ensure that the Honeycomb datastore correctly considers it
@@ -292,6 +333,7 @@ class Event(object):
 
     def send_presampled(self):
         '''send_presampled queues this event for transmission to Honeycomb.
+
         Caller is responsible for sampling logic - will not drop any events
         for sampling. Defining a `samplerate` will ensure that the Honeycomb
         datastore correctly considers it as representing `samplerate` number
