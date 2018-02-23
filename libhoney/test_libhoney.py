@@ -16,6 +16,12 @@ class FakeTransmitter():
     def __init__(self, id):
         self.id = id
 
+    def start(self):
+        pass
+
+    def close(self):
+        pass
+
     def get_response_queue(self):
         return None
 
