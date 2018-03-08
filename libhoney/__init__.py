@@ -40,6 +40,7 @@ random.seed()
 
 def init(writekey="", dataset="", sample_rate=1,
          api_host="https://api.honeycomb.io", max_concurrent_batches=10,
+         max_batch_size=100, send_frequency=0.25,
          block_on_send=False, block_on_response=False):
     '''Initialize libhoney and prepare it to send events to Honeycomb.
 
@@ -55,7 +56,9 @@ def init(writekey="", dataset="", sample_rate=1,
             write key at [https://ui.honeycomb.io/account](https://ui.honeycomb.io/account)
     - `dataset`: the name of the default dataset to which to write
     - `sample_rate`: the default sample rate. 1 / `sample_rate` events will be sent.
-    - `max_concurrent_batches`: the number of threads to spin up to send events
+    - `max_concurrent_batches`: the maximum number of concurrent threads sending events.
+    - `max_batch_size`: the maximum number of events to batch before sendinga.
+    - `send_frequency`: how long to wait before sending a batch of events, in seconds.
     - `block_on_send`: if true, block when send queue fills. If false, drop
             events until there's room in the queue
     - `block_on_response`: if true, block when the response queue fills. If
@@ -83,6 +86,7 @@ def init(writekey="", dataset="", sample_rate=1,
     global g_block_on_response
     _xmit = transmission.Transmission(max_concurrent_batches, block_on_send,
                                       block_on_response)
+    _xmit.start()
     g_writekey = writekey
     g_dataset = dataset
     g_api_host = api_host
@@ -219,6 +223,7 @@ class Builder(object):
         self._fields += fields
         self.writekey = g_writekey
         self.dataset = g_dataset
+        self.api_host = g_api_host
         self.sample_rate = g_sample_rate
 
     def add_field(self, name, val):
@@ -249,6 +254,7 @@ class Builder(object):
         ev = Event(fields=self._fields)
         ev.writekey = self.writekey
         ev.dataset = self.dataset
+        ev.api_host = self.api_host
         ev.sample_rate = self.sample_rate
         return ev
 
@@ -318,9 +324,9 @@ class Event(object):
         '''send queues this event for transmission to Honeycomb.
 
         Raises a SendError exception when called with an uninitialized
-        libhoney. Will drop sampled events when samplerate > 1,
+        libhoney. Will drop sampled events when sample_rate > 1,
         and ensure that the Honeycomb datastore correctly considers it
-        as representing `samplerate` number of similar events.'''
+        as representing `sample_rate` number of similar events.'''
         global _xmit
         if _xmit is None:
             # do this in addition to below to error even when sampled
@@ -335,8 +341,8 @@ class Event(object):
         '''send_presampled queues this event for transmission to Honeycomb.
 
         Caller is responsible for sampling logic - will not drop any events
-        for sampling. Defining a `samplerate` will ensure that the Honeycomb
-        datastore correctly considers it as representing `samplerate` number
+        for sampling. Defining a `sample_rate` will ensure that the Honeycomb
+        datastore correctly considers it as representing `sample_rate` number
         of similar events.'''
         global _xmit
         if _xmit is None:
@@ -358,6 +364,9 @@ class Event(object):
 
     def __str__(self):
         return str(self._fields)
+
+    def fields(self):
+        return self._fields._data
 
 
 def _should_drop(rate):

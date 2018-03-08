@@ -1,40 +1,33 @@
 '''Tests for libhoney/transmission.py'''
 
+import libhoney
 import transmission
 
 import mock
 import unittest
 import requests_mock
-import requests
 import datetime
+import json
+import time
 from six.moves import queue
-
-
-class FakeThread():
-    def start(self):
-        return
 
 
 class TestTransmissionInit(unittest.TestCase):
     def test_defaults(self):
-        ft = FakeThread()
-        transmission.threading.Thread = mock.Mock(return_value=ft)
         t = transmission.Transmission()
         self.assertEqual(t.max_concurrent_batches, 10)
         self.assertIsInstance(t.pending, queue.Queue)
         self.assertIsInstance(t.responses, queue.Queue)
         self.assertEqual(t.block_on_send, False)
         self.assertEqual(t.block_on_response, False)
-        self.assertEqual(len(t.threads), 10)
 
     def test_args(self):
-        ft = FakeThread()
-        transmission.threading.Thread = mock.Mock(return_value=ft)
         t = transmission.Transmission(max_concurrent_batches=4, block_on_send=True, block_on_response=True)
+        t.start()
         self.assertEqual(t.max_concurrent_batches, 4)
         self.assertEqual(t.block_on_send, True)
         self.assertEqual(t.block_on_response, True)
-        self.assertEqual(len(t.threads), 4)
+        t.close()
 
 
 class FakeEvent():
@@ -45,8 +38,6 @@ class FakeEvent():
 
 class TestTransmissionSend(unittest.TestCase):
     def test_send(self):
-        ft = FakeThread()
-        transmission.threading.Thread = mock.Mock(return_value=ft)
         t = transmission.Transmission()
         t.sd = mock.Mock()
         qsize = 4
@@ -87,8 +78,6 @@ class TestTransmissionSend(unittest.TestCase):
 
 class TestTransmissionQueueOverflow(unittest.TestCase):
     def test_send(self):
-        ft = FakeThread()
-        transmission.threading.Thread = mock.Mock(return_value=ft)
         t = transmission.Transmission()
         t.pending = queue.Queue(maxsize=2)
         t.responses = queue.Queue(maxsize=1)
@@ -100,70 +89,97 @@ class TestTransmissionQueueOverflow(unittest.TestCase):
 
 
 class TestTransmissionPrivateSend(unittest.TestCase):
-    def test_send(self):
-        ft = FakeThread()
-        transmission.threading.Thread = mock.Mock(return_value=ft)
-        t = transmission.Transmission()
-        t.sd = mock.Mock()
-        t.responses.put_nowait = mock.Mock()
-        t.responses.put = mock.Mock()
-        fakeNow = datetime.datetime(2012, 1, 1, 10, 10, 10)
-        transmission.get_now = mock.MagicMock(return_value=fakeNow)
-
+    def test_batching(self):
         with requests_mock.Mocker() as m:
-            ev = FakeEvent()
+            m.post("http://urlme/1/batch/datame",
+                   text=json.dumps(200 * [{"status": 202}]), status_code=200,
+                   request_headers={"X-Honeycomb-Team": "writeme"})
+
+            t = transmission.Transmission()
+            t.start()
+            for i in range(300):
+                ev = libhoney.Event()
+                ev.writekey = "writeme"
+                ev.dataset = "datame"
+                ev.api_host = "http://urlme/"
+                ev.metadata = "metadaaata"
+                ev.sample_rate = 3
+                ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+                ev.add_field("key", i)
+                t.send(ev)
+            t.close()
+
+            resp_count = 0
+            while not t.responses.empty():
+                resp = t.responses.get()
+                if resp is None:
+                    break
+                assert resp["status_code"] == 202
+                assert resp["metadata"] == "metadaaata"
+                resp_count += 1
+            assert resp_count == 300
+
+    def test_grouping(self):
+        with requests_mock.Mocker() as m:
+            m.post("http://urlme/1/batch/dataset",
+                   text=json.dumps(100 * [{"status": 202}]), status_code=200,
+                   request_headers={"X-Honeycomb-Team": "writeme"})
+
+            m.post("http://urlme/1/batch/alt_dataset",
+                   text=json.dumps(100 * [{"status": 202}]), status_code=200,
+                   request_headers={"X-Honeycomb-Team": "writeme"})
+
+            t = transmission.Transmission(max_concurrent_batches=1)
+            t.start()
+
+            builder = libhoney.Builder()
+            builder.writekey = "writeme"
+            builder.dataset = "dataset"
+            builder.api_host = "http://urlme/"
+            for i in range(100):
+                ev = builder.new_event()
+                ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+                ev.add_field("key", i)
+                t.send(ev)
+
+            builder.dataset = "alt_dataset"
+            for i in range(100):
+                ev = builder.new_event()
+                ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+                ev.add_field("key", i)
+                t.send(ev)
+
+            t.close()
+            resp_count = 0
+            while not t.responses.empty():
+                resp = t.responses.get()
+                if resp is None:
+                    break
+                assert resp["status_code"] == 202
+                resp_count += 1
+            assert resp_count == 200
+
+            assert ({h.url for h in m.request_history} ==
+                {"http://urlme/1/batch/dataset", "http://urlme/1/batch/alt_dataset"})
+
+    def test_flush_after_timeout(self):
+        with requests_mock.Mocker() as m:
+            m.post("http://urlme/1/batch/dataset",
+                   text=json.dumps(100 * [{"status": 202}]), status_code=200,
+                   request_headers={"X-Honeycomb-Team": "writeme"})
+
+            t = transmission.Transmission(max_concurrent_batches=1, send_frequency=0.1)
+            t.start()
+
+            ev = libhoney.Event()
             ev.writekey = "writeme"
-            ev.dataset = "datame"
+            ev.dataset = "dataset"
+            ev.add_field("key", "value")
             ev.api_host = "http://urlme/"
-            ev.metadata = "metame"
-            ev.sample_rate = 3
-            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
-            m.post("http://urlme/1/events/datame",
-                text="", status_code=200,
-                request_headers={
-                    "X-Event-Time": "2013-01-01T11:11:11Z",
-                    "X-Honeycomb-Team": "writeme",
-                })
-            t._send(ev)
-            t.sd.incr.assert_called_with("messages_sent")
-            expected_response = {
-                "status_code": 200,
-                "duration": 0,
-                "metadata": ev.metadata,
-                "body": "",
-                "error": "",
-            }
-            t.responses.put_nowait.assert_called_with(expected_response)
 
-            # and with subsecond precision, now
-            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11, 12345)
-            m.post("http://urlme/1/events/datame",
-                text="", status_code=200,
-                request_headers={
-                    "X-Event-Time": "2013-01-01T11:11:11.012345Z",
-                    "X-Honeycomb-Team": "writeme",
-                })
-            t._send(ev)
-            expected_response = {
-                "status_code": 200,
-                "duration": 0,
-                "metadata": ev.metadata,
-                "body": "",
-                "error": "",
-            }
-            t.responses.put_nowait.assert_called_with(expected_response)
+            t.send(ev)
 
-            # see that an exception thrown by requests is caught and a response
-            # created
-            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11, 12345)
-            m.post("http://urlme/1/events/datame",
-                exc=requests.exceptions.SSLError)
-            t._send(ev)
-            expected_response = {
-                "status_code": 0,
-                "duration": 0,
-                "metadata": ev.metadata,
-                "body": "",
-                "error": "SSLError()",
-            }
-            t.responses.put_nowait.assert_called_with(expected_response)
+            time.sleep(0.2)
+            resp = t.responses.get()
+            assert resp["status_code"] == 202
+            t.close()

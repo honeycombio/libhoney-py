@@ -16,6 +16,7 @@ setup(name='libhoney',
           'requests',
           'statsd',
           'six',
+          'futures; python_version == "2.7"'
       ],
       tests_require=[
         'mock',
