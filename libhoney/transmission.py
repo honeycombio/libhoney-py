@@ -18,12 +18,12 @@ destination = collections.namedtuple("destination",
 
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
-                 block_on_response=False, batchsize=100, batch_timeout=0.25):
+                 block_on_response=False, max_batch_size=100, send_frequency=0.25):
         self.max_concurrent_batches = max_concurrent_batches
         self.block_on_send = block_on_send
         self.block_on_response = block_on_response
-        self.batchsize = batchsize
-        self.batch_timeout = batch_timeout
+        self.max_batch_size = max_batch_size
+        self.send_frequency = send_frequency
 
         session = requests.Session()
         session.headers.update({"User-Agent": "libhoney-py/"+VERSION})
@@ -78,15 +78,15 @@ class Transmission():
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_concurrent_batches) as pool:
             while True:
                 try:
-                    ev = self.pending.get(timeout=self.batch_timeout)
+                    ev = self.pending.get(timeout=self.send_frequency)
                     if ev is None:
                         # signals shutdown
                         pool.submit(self._flush, events)
                         pool.shutdown()
                         return
                     events.append(ev)
-                    if (len(events) > self.batchsize or
-                            time.time() - last_flush > self.batch_timeout):
+                    if (len(events) > self.max_batch_size or
+                            time.time() - last_flush > self.send_frequency):
                         pool.submit(self._flush, events)
                         events = []
                         last_flush = time.time()

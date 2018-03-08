@@ -40,6 +40,7 @@ random.seed()
 
 def init(writekey="", dataset="", sample_rate=1,
          api_host="https://api.honeycomb.io", max_concurrent_batches=10,
+         max_batch_size=100, send_frequency=0.25,
          block_on_send=False, block_on_response=False):
     '''Initialize libhoney and prepare it to send events to Honeycomb.
 
@@ -55,7 +56,9 @@ def init(writekey="", dataset="", sample_rate=1,
             write key at [https://ui.honeycomb.io/account](https://ui.honeycomb.io/account)
     - `dataset`: the name of the default dataset to which to write
     - `sample_rate`: the default sample rate. 1 / `sample_rate` events will be sent.
-    - `max_concurrent_batches`: the number of threads to spin up to send events
+    - `max_concurrent_batches`: the maximum number of concurrent threads sending events.
+    - `max_batch_size`: the maximum number of events to batch before sendinga.
+    - `send_frequency`: how long to wait before sending a batch of events, in seconds.
     - `block_on_send`: if true, block when send queue fills. If false, drop
             events until there's room in the queue
     - `block_on_response`: if true, block when the response queue fills. If

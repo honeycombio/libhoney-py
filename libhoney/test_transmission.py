@@ -168,7 +168,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                    text=json.dumps(100 * [{"status": 202}]), status_code=200,
                    request_headers={"X-Honeycomb-Team": "writeme"})
 
-            t = transmission.Transmission(max_concurrent_batches=1, batch_timeout=0.1)
+            t = transmission.Transmission(max_concurrent_batches=1, send_frequency=0.1)
             t.start()
 
             ev = libhoney.Event()
