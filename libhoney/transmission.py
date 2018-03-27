@@ -116,7 +116,7 @@ class Transmission():
                 if ev.created_at.tzinfo is None:
                     event_time += "Z"
                 payload.append({
-                    "timestamp": event_time,
+                    "time": event_time,
                     "samplerate": ev.sample_rate,
                     "data": ev.fields()})
             resp = self.session.post(
