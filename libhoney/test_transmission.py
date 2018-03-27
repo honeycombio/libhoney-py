@@ -119,6 +119,13 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                 resp_count += 1
             assert resp_count == 300
 
+            for req in m.request_history:
+                body = req.json()
+                for event in body:
+                    assert event["time"] == "2013-01-01T11:11:11Z"
+                    assert event["samplerate"] == 3
+
+
     def test_grouping(self):
         with requests_mock.Mocker() as m:
             m.post("http://urlme/1/batch/dataset",
