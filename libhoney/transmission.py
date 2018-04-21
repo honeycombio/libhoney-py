@@ -2,6 +2,7 @@
 
 from six.moves import queue
 from six.moves.urllib.parse import urljoin
+import json
 import threading
 import requests
 import statsd
@@ -121,8 +122,8 @@ class Transmission():
                     "data": ev.fields()})
             resp = self.session.post(
                 url,
-                headers={"X-Honeycomb-Team": destination.writekey},
-                json=payload)
+                headers={"X-Honeycomb-Team": destination.writekey, "Content-Type": "application/json"},
+                data=json.dumps(payload))
             status_code = resp.status_code
             resp.raise_for_status()
             statuses = [d["status"] for d in resp.json()]
