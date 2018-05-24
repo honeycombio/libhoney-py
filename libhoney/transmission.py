@@ -12,10 +12,18 @@ import concurrent.futures
 
 VERSION = "unset"  # set by libhoney
 
+try:
+    from tornado import ioloop, gen
+    from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+    from tornado.locks import Semaphore
+    from tornado.queues import Queue, QueueFull
+    from tornado.util import TimeoutError
+    has_tornado = True
+except ImportError:
+    has_tornado = False
 
 destination = collections.namedtuple("destination",
                                      ["writekey", "dataset", "api_host"])
-
 
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
@@ -174,6 +182,198 @@ class Transmission():
         ''' return the responses queue on to which will be sent the response
         objects from each event send'''
         return self.responses
+
+# only define this class if tornado exists, otherwise we'll get NameError on gen
+# Is there a better way to do this?
+if has_tornado:
+    class TornadoTransmissionException(Exception):
+        pass
+
+    class TornadoTransmission():
+        def __init__(self, max_concurrent_batches=10, block_on_send=False,
+                    block_on_response=False, max_batch_size=100, send_frequency=0.25):
+            if not has_tornado:
+                raise ImportError('TornadoTransmission requires tornado, but it was not found.')
+
+            self.block_on_send = block_on_send
+            self.block_on_response = block_on_response
+            self.max_batch_size = max_batch_size
+            self.send_frequency = send_frequency
+
+            self.http_client = AsyncHTTPClient(
+                force_instance=True,
+                defaults=dict(user_agent="libhoney-py/"+VERSION))
+
+            # libhoney adds events to the pending queue for us to send
+            self.pending = Queue(maxsize=1000)
+            # we hand back responses from the API on the responses queue
+            self.responses = Queue(maxsize=2000)
+
+            self.batch_data = {}
+            self.sd = statsd.StatsClient(prefix="libhoney")
+            self.batch_sem = Semaphore(max_concurrent_batches)
+
+        def start(self):
+            ioloop.IOLoop.current().spawn_callback(self._sender)
+
+        def send(self, ev):
+            '''send accepts an event and queues it to be sent'''
+            self.sd.gauge("queue_length", self.pending.qsize())
+            try:
+                if self.block_on_send:
+                    self.pending.put(ev)
+                else:
+                    self.pending.put_nowait(ev)
+                self.sd.incr("messages_queued")
+            except QueueFull:
+                response = {
+                    "status_code": 0,
+                    "duration": 0,
+                    "metadata": ev.metadata,
+                    "body": "",
+                    "error": "event dropped; queue overflow",
+                }
+                if self.block_on_response:
+                    self.responses.put(response)
+                else:
+                    try:
+                        self.responses.put_nowait(response)
+                    except QueueFull:
+                        # if the response queue is full when trying to add an event
+                        # queue is full response, just skip it.
+                        pass
+                self.sd.incr("queue_overflow")
+
+        @gen.coroutine
+        def _sender(self):
+            '''_sender is the control loop that pulls events off the `self.pending`
+            queue and submits batches for actual sending. '''
+            events = []
+            last_flush = time.time()
+            while True:
+                try:
+                    ev = yield self.pending.get(timeout=self.send_frequency)
+                    if ev is None:
+                        # signals shutdown
+                        yield self._flush(events)
+                        return
+                    events.append(ev)
+                    if (len(events) > self.max_batch_size or
+                        time.time() - last_flush > self.send_frequency):
+                        yield self._flush(events)
+                        events = []
+                except TimeoutError:
+                    yield self._flush(events)
+                    events = []
+                    last_flush = time.time()
+
+        @gen.coroutine
+        def _flush(self, events):
+            if not events:
+                return
+            for dest, group in group_events_by_destination(events).items():
+                yield self._send_batch(dest, group)
+
+        @gen.coroutine
+        def _send_batch(self, destination, events):
+            ''' Makes a single batch API request with the given list of events. The
+            `destination` argument contains the write key, API host and dataset
+            name used to build the request.'''
+            start = time.time()
+            status_code = 0
+
+            try:
+                # enforce max_concurrent_batches
+                yield self.batch_sem.acquire()
+                url = urljoin(urljoin(destination.api_host, "/1/batch/"),
+                            destination.dataset)
+                payload = []
+                for ev in events:
+                    event_time = ev.created_at.isoformat()
+                    if ev.created_at.tzinfo is None:
+                        event_time += "Z"
+                    payload.append({
+                        "time": event_time,
+                        "samplerate": ev.sample_rate,
+                        "data": ev.fields()})
+                req = HTTPRequest(
+                    url,
+                    method='POST',
+                    headers={
+                        "X-Honeycomb-Team": destination.writekey,
+                        "Content-Type": "application/json",
+                    },
+                    body=json.dumps(payload),
+                )
+                self.http_client.fetch(req, self._response_callback)
+                # store the events that were sent so we can process responses later
+                # it is important that we delete these eventually, or we'll run into memory issues
+                self.batch_data[req] = {"start": start, "events": events}
+            except Exception as e:
+                # Catch all exceptions and hand them to the responses queue.
+                self._enqueue_errors(status_code, e, start, events)
+            finally:
+                self.batch_sem.release()
+
+        def _enqueue_errors(self, status_code, error, start, events):
+            for ev in events:
+                self.sd.incr("send_errors")
+                self._enqueue_response(status_code, "", error, start, ev.metadata)
+
+        def _response_callback(self, resp):
+            # resp.request should be the same HTTPRequest object built by _send_batch
+            # and mapped to values in batch_data
+            events = self.batch_data[resp.request]["events"]
+            start  = self.batch_data[resp.request]["start"]
+            try:
+                status_code = resp.code
+                resp.rethrow()
+
+                statuses = [d["status"] for d in json.loads(resp.body)]
+                for ev, status in zip(events, statuses):
+                    self._enqueue_response(status, "", None, start, ev.metadata)
+                    self.sd.incr("messages_sent")
+            except Exception as e:
+                self._enqueue_errors(status_code, e, start, events)
+                self.sd.incr("send_errors")
+            finally:
+                # clean up the data for this batch
+                del self.batch_data[resp.request]
+
+        def _enqueue_response(self, status_code, body, error, start, metadata):
+            resp = {
+                "status_code": status_code,
+                "body": body,
+                "error": error,
+                "duration": (time.time() - start) * 1000,
+                "metadata": metadata
+            }
+            if self.block_on_response:
+                self.responses.put(resp)
+            else:
+                try:
+                    self.responses.put_nowait(resp)
+                except QueueFull:
+                    pass
+
+        def close(self):
+            '''call close to send all in-flight requests and shut down the
+                senders nicely. Times out after max 20 seconds per sending thread
+                plus 10 seconds for the response queue'''
+            try:
+                self.pending.put(None, 10)
+            except QueueFull:
+                pass
+            # signal to the responses queue that nothing more is coming.
+            try:
+                self.responses.put(None, 10)
+            except QueueFull:
+                pass
+
+        def get_response_queue(self):
+            ''' return the responses queue on to which will be sent the response
+            objects from each event send'''
+            return self.responses
 
 
 def group_events_by_destination(events):
