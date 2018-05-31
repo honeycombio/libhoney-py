@@ -31,7 +31,7 @@ def event_routine():
 @gen.coroutine
 def main():
     libhoney.init(writekey="abcabc123123defdef456456", dataset="factorial.tornado",
-        xmit=TornadoTransmission())
+        transmission_impl=TornadoTransmission())
     ioloop.IOLoop.current().spawn_callback(event_routine)
 
     while True:

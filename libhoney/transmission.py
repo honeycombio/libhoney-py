@@ -244,6 +244,9 @@ if has_tornado:
                         pass
                 self.sd.incr("queue_overflow")
 
+        # We're using the older decorator/yield model for compatibility with
+        # Python versions before 3.5.
+        # See: http://www.tornadoweb.org/en/stable/guide/coroutines.html#python-3-5-async-and-await
         @gen.coroutine
         def _sender(self):
             '''_sender is the control loop that pulls events off the `self.pending`
