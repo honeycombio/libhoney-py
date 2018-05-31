@@ -6,7 +6,7 @@ import datetime
 import json
 import unittest
 import mock
-
+from six.moves import queue
 
 def sample_dyn_fn():
     return "dyna", "magic"
@@ -28,7 +28,16 @@ class FakeTransmitter():
 
 class TestGlobalScope(unittest.TestCase):
     def setUp(self):
+        # many tests muck with the libhoney global state
+        # reset it at the start of each test
         libhoney._fields = libhoney.FieldHolder()
+        libhoney._xmit = None
+        libhoney.g_api_host = ""
+        libhoney.g_writekey = ""
+        libhoney.g_dataset = ""
+        libhoney.g_sample_rate = 1
+        libhoney.g_responses = queue.Queue(maxsize=1)
+        libhoney.g_block_on_response = False
 
     def test_init(self):
         ft = FakeTransmitter(3)
@@ -82,7 +91,16 @@ class TestGlobalScope(unittest.TestCase):
 
 class TestFieldHolder(unittest.TestCase):
     def setUp(self):
+        # many tests muck with the libhoney global state
+        # reset it at the start of each test
         libhoney._fields = libhoney.FieldHolder()
+        libhoney._xmit = None
+        libhoney.g_api_host = ""
+        libhoney.g_writekey = ""
+        libhoney.g_dataset = ""
+        libhoney.g_sample_rate = 1
+        libhoney.g_responses = queue.Queue(maxsize=1)
+        libhoney.g_block_on_response = False
 
     def test_add_field(self):
         expected_data = {}
@@ -115,7 +133,16 @@ class TestFieldHolder(unittest.TestCase):
 
 class TestBuilder(unittest.TestCase):
     def setUp(self):
+        # many tests muck with the libhoney global state
+        # reset it at the start of each test
         libhoney._fields = libhoney.FieldHolder()
+        libhoney._xmit = None
+        libhoney.g_api_host = ""
+        libhoney.g_writekey = ""
+        libhoney.g_dataset = ""
+        libhoney.g_sample_rate = 1
+        libhoney.g_responses = queue.Queue(maxsize=1)
+        libhoney.g_block_on_response = False
 
     def test_new_builder(self):
         # new builder, no arguments
@@ -206,7 +233,16 @@ class TestBuilder(unittest.TestCase):
 
 class TestEvent(unittest.TestCase):
     def setUp(self):
+        # many tests muck with the libhoney global state
+        # reset it at the start of each test
         libhoney._fields = libhoney.FieldHolder()
+        libhoney._xmit = None
+        libhoney.g_api_host = ""
+        libhoney.g_writekey = ""
+        libhoney.g_dataset = ""
+        libhoney.g_sample_rate = 1
+        libhoney.g_responses = queue.Queue(maxsize=1)
+        libhoney.g_block_on_response = False
 
     def test_timer(self):
         class fakeDate:
@@ -261,7 +297,7 @@ class TestEvent(unittest.TestCase):
         ev.api_host = "myhost"
         with self.assertRaises(libhoney.SendError) as c2:
             ev.send()
-        self.assertTrue("No write_key specified." in
+        self.assertTrue("No writekey specified." in
                         str(c2.exception))
         ev.writekey = "letmewrite"
         with self.assertRaises(libhoney.SendError) as c2:

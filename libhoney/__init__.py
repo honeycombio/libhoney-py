@@ -218,7 +218,7 @@ class Builder(object):
        fields. Events created from this builder will inherit all fields
        and dynamic fields from this builder and the global environment'''
 
-    def __init__(self, data={}, dyn_fields=[], fields=FieldHolder()):
+    def __init__(self, data={}, dyn_fields=[], fields=FieldHolder(), client=None):
         self._fields = FieldHolder()  # get an empty FH
         self._fields += _fields       # fill it with the global state
         self._fields.add(data)        # and anything passed in
@@ -228,6 +228,7 @@ class Builder(object):
         self.dataset = g_dataset
         self.api_host = g_api_host
         self.sample_rate = g_sample_rate
+        self.client = client
 
     def add_field(self, name, val):
         self._fields.add_field(name, val)
@@ -254,7 +255,7 @@ class Builder(object):
     def new_event(self):
         '''creates a new event from this builder, inheriting all fields and
            dynamic fields present in the builder'''
-        ev = Event(fields=self._fields)
+        ev = Event(fields=self._fields, client=self.client)
         ev.writekey = self.writekey
         ev.dataset = self.dataset
         ev.api_host = self.api_host
@@ -264,17 +265,18 @@ class Builder(object):
     def clone(self):
         '''creates a new builder from this one, creating its own scope to
            which additional fields and dynamic fields can be added.'''
-        c = Builder(fields=self._fields)
+        c = Builder(fields=self._fields, client=self.client)
         c.writekey = self.writekey
         c.dataset = self.dataset
         c.sample_rate = self.sample_rate
+        c.api_host = self.api_host
         return c
 
 
 class Event(object):
     '''An Event is a collection of fields that will be sent to Honeycomb.'''
 
-    def __init__(self, data={}, dyn_fields=[], fields=FieldHolder()):
+    def __init__(self, data={}, dyn_fields=[], fields=FieldHolder(), client=None):
         # populate the event's fields
         self._fields = FieldHolder()  # get an empty FH
         self._fields += _fields       # fill it with the global state
@@ -291,6 +293,8 @@ class Event(object):
         # execute all the dynamic functions and add their data
         for fn in self._fields._dyn_fields:
             self._fields.add_field(fn.__name__, fn())
+
+        self.client = client
 
     def add_field(self, name, val):
         self._fields.add_field(name, val)
@@ -330,14 +334,20 @@ class Event(object):
         libhoney. Will drop sampled events when sample_rate > 1,
         and ensure that the Honeycomb datastore correctly considers it
         as representing `sample_rate` number of similar events.'''
-        global _xmit
-        if _xmit is None:
-            # do this in addition to below to error even when sampled
-            raise SendError(
-                "Tried to send on a closed or uninitialized libhoney")
+        if self.client is None:
+            global _xmit
+            if _xmit is None:
+                # do this in addition to below to error even when sampled
+                raise SendError(
+                    "Tried to send on a closed or uninitialized libhoney")
+
         if _should_drop(self.sample_rate):
-            _send_dropped_response(self)
+            if self.client:
+                self.client.send_dropped_response(self)
+            else:
+                _send_dropped_response(self)
             return
+
         self.send_presampled()
 
     def send_presampled(self):
@@ -347,10 +357,6 @@ class Event(object):
         for sampling. Defining a `sample_rate` will ensure that the Honeycomb
         datastore correctly considers it as representing `sample_rate` number
         of similar events.'''
-        global _xmit
-        if _xmit is None:
-            raise SendError(
-                "Tried to send on a closed or uninitialized libhoney")
         if self._fields.is_empty():
             raise SendError(
                 "No metrics added to event. Won't send empty event.")
@@ -359,11 +365,20 @@ class Event(object):
                 "No api_host for Honeycomb. Can't send to the Great Unknown.")
         if self.writekey == "":
             raise SendError(
-                "No write_key specified. Can't send event.")
+                "No writekey specified. Can't send event.")
         if self.dataset == "":
             raise SendError(
                 "No dataset for Honeycomb. Can't send event without knowing which dataset it belongs to.")
-        _xmit.send(self)
+
+        if self.client:
+            self.client.send(self)
+        else:
+            global _xmit
+            if _xmit is None:
+                raise SendError(
+                    "Tried to send on a closed or uninitialized libhoney")
+
+            _xmit.send(self)
 
     def __str__(self):
         return str(self._fields)
