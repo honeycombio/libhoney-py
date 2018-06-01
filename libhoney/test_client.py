@@ -166,3 +166,9 @@ class TestClient(unittest.TestCase):
                     "body": "",
                     "error": "event dropped due to sampling",
                 })
+
+    def test_xmit_override(self):
+        '''verify that the client accepts an alternative Transmission'''
+        mock_xmit = mock.Mock()
+        with client.Client(transmission_impl=mock_xmit) as c:
+            self.assertEqual(c.xmit, mock_xmit)
