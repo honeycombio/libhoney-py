@@ -1,19 +1,17 @@
-'''definition for libhoney Client'''
-
 from six.moves import queue
 
 from . import transmission, Event, Builder, FieldHolder, SendError
 
 
 class Client(object):
-    '''Instantiate a libhoney Client that can prepare an send events to Honeycomb.
+    '''Instantiate a libhoney Client that can prepare and send events to Honeycomb.
 
     Note that libhoney Clients initialize a number of threads to handle
     sending payloads to Honeycomb. Client initialization is heavy, and re-use
     of Client objects is encouraged. Unless you have specific requirements,
     we recommend you use the global `libhoney.init()` rather than Client instances.
 
-    When using a client instance, you need to use the client to generate Event and Builder
+    When using a Client instance, you need to use the Client to generate Event and Builder
     objects. Examples:
 
     ```
@@ -32,7 +30,7 @@ class Client(object):
     ```
 
     To ensure that events are flushed before program termination, you should explicitly call `close()`
-    on your client instance.
+    on your Client instance.
 
     Args:
 
@@ -41,7 +39,7 @@ class Client(object):
     - `dataset`: the name of the default dataset to which to write
     - `sample_rate`: the default sample rate. 1 / `sample_rate` events will be sent.
     - `max_concurrent_batches`: the maximum number of concurrent threads sending events.
-    - `max_batch_size`: the maximum number of events to batch before sendinga.
+    - `max_batch_size`: the maximum number of events to batch before sending.
     - `send_frequency`: how long to wait before sending a batch of events, in seconds.
     - `block_on_send`: if true, block when send queue fills. If false, drop
             events until there's room in the queue
@@ -83,7 +81,9 @@ class Client(object):
         - `body` - the content returned by API (will be empty on success)
         - `error` - in an error condition, this is filled with the error message
 
-        When a None object appears on the queue the reader should exit'''
+        When the Client's `close` method is called, a None will be inserted on
+        the queue, indicating that no further responses will be written.
+        '''
         return self._responses
 
     def add_field(self, name, val):
