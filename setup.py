@@ -22,7 +22,8 @@ setup(name='libhoney',
         'mock',
         'pbr',
         'requests-mock',
-        'bumpversion'
+        'bumpversion',
+        'tornado',
       ],
       test_suite='libhoney',
       zip_safe=False)

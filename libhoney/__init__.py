@@ -41,7 +41,7 @@ random.seed()
 def init(writekey="", dataset="", sample_rate=1,
          api_host="https://api.honeycomb.io", max_concurrent_batches=10,
          max_batch_size=100, send_frequency=0.25,
-         block_on_send=False, block_on_response=False):
+         block_on_send=False, block_on_response=False, transmission_impl=None):
     '''Initialize libhoney and prepare it to send events to Honeycomb.
 
     Note that libhoney initialization initializes a number of threads to handle
@@ -63,6 +63,7 @@ def init(writekey="", dataset="", sample_rate=1,
             events until there's room in the queue
     - `block_on_response`: if true, block when the response queue fills. If
             false, drop response objects.
+    - `transmission_impl`: if set, override the default transmission implementation (for example, TornadoTransmission)
 
     --------
 
@@ -84,8 +85,10 @@ def init(writekey="", dataset="", sample_rate=1,
     '''
     global _xmit, g_writekey, g_dataset, g_api_host, g_sample_rate, g_responses
     global g_block_on_response
-    _xmit = transmission.Transmission(max_concurrent_batches, block_on_send,
-                                      block_on_response)
+    _xmit = transmission_impl
+    if _xmit is None:
+        _xmit = transmission.Transmission(max_concurrent_batches, block_on_send,
+                                        block_on_response)
     _xmit.start()
     g_writekey = writekey
     g_dataset = dataset
