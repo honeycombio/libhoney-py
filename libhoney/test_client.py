@@ -1,11 +1,10 @@
 '''Tests for libhoney/client.py'''
 
-from . import client
-import __init__ as libhoney
-
 import unittest
 import mock
-from six.moves import queue
+
+import libhoney
+import libhoney.client as client
 
 def sample_dyn_fn():
     return "dyna", "magic"
@@ -13,19 +12,10 @@ def sample_dyn_fn():
 
 class TestClient(unittest.TestCase):
     def setUp(self):
-        # many tests muck with the libhoney global state
-        # reset it at the start of each test
-        libhoney._fields = libhoney.FieldHolder()
-        libhoney._xmit = None
-        libhoney.g_api_host = ""
-        libhoney.g_writekey = ""
-        libhoney.g_dataset = ""
-        libhoney.g_sample_rate = 1
-        libhoney.g_responses = queue.Queue(maxsize=1)
-        libhoney.g_block_on_response = False
+        libhoney.close()
 
         self.tx = mock.Mock()
-        self.m_xmit = mock.patch('libhoney.transmission.Transmission')
+        self.m_xmit = mock.patch('libhoney.client.Transmission')
         self.m_xmit.start().return_value = self.tx
 
     def tearDown(self):
@@ -64,19 +54,19 @@ class TestClient(unittest.TestCase):
         ed = {"whomp": True}
         with client.Client() as c:
             c.add_field("whomp", True)
-            self.assertEqual(c._fields._data, ed)
+            self.assertEqual(c.fields._data, ed)
 
     def test_add_dynamic_field(self):
         ed = set([sample_dyn_fn])
         with client.Client() as c:
             c.add_dynamic_field(sample_dyn_fn)
-            self.assertEqual(c._fields._dyn_fields, ed)
+            self.assertEqual(c.fields._dyn_fields, ed)
 
     def test_add(self):
         ed = {"whomp": True}
         with client.Client() as c:
             c.add(ed)
-            self.assertEqual(c._fields._data, ed)
+            self.assertEqual(c.fields._data, ed)
 
     def test_new_event(self):
         with client.Client(writekey="client_key", dataset="client_dataset") as c:
@@ -144,14 +134,14 @@ class TestClient(unittest.TestCase):
             ev.add_field("global", "event")
             ev.send()
             # test our assumption about what's actually mocked
-            self.assertEqual(libhoney._xmit, self.tx)
+            self.assertEqual(libhoney.state.G_CLIENT.xmit, self.tx)
             # check that we used the global xmit
             self.tx.send.assert_called_with(ev)
             # check that the client xmit was not used
             self.assertFalse(c.xmit.send.called)
 
     def test_send_dropped_response(self):
-        with mock.patch('libhoney._should_drop') as m_drop:
+        with mock.patch('libhoney.event._should_drop') as m_drop:
             m_drop.return_value = True
 
             with client.Client(writekey="mykey", dataset="something") as c:

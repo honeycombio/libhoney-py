@@ -1,7 +1,10 @@
 from six.moves import queue
 
-from . import transmission, Event, Builder, FieldHolder, SendError
-
+from libhoney.event import Event
+from libhoney.builder import Builder
+from libhoney.fields import FieldHolder
+from libhoney.errors import SendError
+from libhoney.transmission import Transmission
 
 class Client(object):
     '''Instantiate a libhoney Client that can prepare and send events to Honeycomb.
@@ -56,7 +59,7 @@ class Client(object):
 
         self.xmit = transmission_impl
         if self.xmit is None:
-            self.xmit = transmission.Transmission(
+            self.xmit = Transmission(
                 max_concurrent_batches, block_on_send, block_on_response)
 
         self.xmit.start()
@@ -67,7 +70,7 @@ class Client(object):
         self._responses = self.xmit.get_response_queue()
         self.block_on_response = block_on_response
 
-        self._fields = FieldHolder()
+        self.fields = FieldHolder()
 
     # enable use in a context manager
     def __enter__(self):
@@ -94,18 +97,18 @@ class Client(object):
 
     def add_field(self, name, val):
         '''add a global field. This field will be sent with every event.'''
-        self._fields.add_field(name, val)
+        self.fields.add_field(name, val)
 
     def add_dynamic_field(self, fn):
         '''add a global dynamic field. This function will be executed every time an
         event is created. The key/value pair of the function's name and its
         return value will be sent with every event.'''
-        self._fields.add_dynamic_field(fn)
+        self.fields.add_dynamic_field(fn)
 
     def add(self, data):
         '''add takes a mappable object and adds each key/value pair to the
         global scope'''
-        self._fields.add(data)
+        self.fields.add(data)
 
     def send(self, event):
         '''Enqueues the given event to be sent to Honeycomb.
@@ -166,19 +169,11 @@ class Client(object):
 
     def new_event(self, data={}):
         '''Return an Event, initialized to be sent with this client'''
-        ev = Event(data=data, fields=self._fields, client=self)
-        ev.api_host = self.api_host
-        ev.writekey = self.writekey
-        ev.dataset = self.dataset
-        ev.sample_rate = self.sample_rate
+        ev = Event(data=data, client=self)
         return ev
 
     def new_builder(self):
         '''Return a Builder. Events built from this builder will be sent with
         this client'''
-        builder = Builder(fields=self._fields, client=self)
-        builder.api_host = self.api_host
-        builder.writekey = self.writekey
-        builder.dataset = self.dataset
-        builder.sample_rate = self.sample_rate
+        builder = Builder(client=self)
         return builder

@@ -45,7 +45,7 @@ def read_responses(resp_queue):
         status = "sending event with metadata {} took {}ms and got response code {} with message \"{}\"".format(
             resp["metadata"], resp["duration"], resp["status_code"],
             resp["body"].rstrip())
-        print status
+        print(status)
 
 
 if __name__ == "__main__":
