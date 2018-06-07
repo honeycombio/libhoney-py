@@ -17,7 +17,7 @@ import atexit
 import datetime
 from contextlib import contextmanager
 import json
-from libhoney import transmission
+from libhoney import transmission, trace
 import inspect
 import random
 from six.moves import queue
@@ -32,6 +32,7 @@ g_api_host = ""
 g_sample_rate = 1
 g_responses = queue.Queue(maxsize=1)
 g_block_on_response = False
+g_tracer = None
 
 transmission.VERSION = VERSION
 
@@ -83,7 +84,7 @@ def init(writekey="", dataset="", sample_rate=1,
 
         gunicorn -c /path/to/conf.py
     '''
-    global _xmit, g_writekey, g_dataset, g_api_host, g_sample_rate, g_responses
+    global _xmit, g_writekey, g_dataset, g_api_host, g_sample_rate, g_responses, g_tracer
     global g_block_on_response
     _xmit = transmission_impl
     if _xmit is None:
@@ -96,6 +97,7 @@ def init(writekey="", dataset="", sample_rate=1,
     g_sample_rate = sample_rate
     g_responses = _xmit.get_response_queue()
     g_block_on_response = block_on_response
+    g_tracer = trace.Tracer(sample_rate=sample_rate)
 
 
 def responses():
@@ -159,6 +161,25 @@ def close():
     # we should error on post-close sends
     _xmit = None
 
+def trace_call(fn, *args, service_name="", trace_name="", trace_context=None, trace_id="", **kwargs):
+    '''Wraps the call to enable tracing in libhoney. If this is the first trace
+    in the call stack, a new trace_id will be generated. Subsequent wrapped
+    calls will be linked back to the parent trace_id and span_ids all the way
+    down the stack.
+
+    - `fn` - the function that you want to wrap
+    - `*args` - any positional arguments to the wrapped function
+    - `service_name` - optional - name for your service. will show up in the trace UI
+    - `trace_name` - optional - the name for this call. If not set, will default to
+          function name
+    - `trace_context` - optional - a dictionary of any fields you would like to
+          append to the event
+    - `trace_id` - optional - if set, will use a specific trace_id. Set this
+          if you have already generated a trace ID
+    - `**kwargs` - any keyword args to the wrapped function
+    '''
+    return g_tracer.trace_call(fn, *args, service_name=service_name, trace_name=trace_name,
+                               trace_context=trace_context, trace_id=trace_id, **kwargs)
 
 atexit.register(close) # safe because it's a no-op unless init() was called
 
