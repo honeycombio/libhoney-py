@@ -11,8 +11,8 @@ class Client(object):
 
     Note that libhoney Clients initialize a number of threads to handle
     sending payloads to Honeycomb. Client initialization is heavy, and re-use
-    of Client objects is encouraged. Unless you have specific requirements,
-    we recommend you use the global `libhoney.init()` rather than Client instances.
+    of Client objects is encouraged. If you must use multiple clients, consider
+    reducing `max_concurrent_batches` to reduce the number of threads per client.
 
     When using a Client instance, you need to use the Client to generate Event and Builder
     objects. Examples:
@@ -172,8 +172,14 @@ class Client(object):
         ev = Event(data=data, client=self)
         return ev
 
-    def new_builder(self):
+    def new_builder(self, data=None, dyn_fields=None, fields=None):
         '''Return a Builder. Events built from this builder will be sent with
         this client'''
-        builder = Builder(client=self)
+        if data is None:
+            data = {}
+        if dyn_fields is None:
+            dyn_fields = []
+        if fields is None:
+            fields = FieldHolder()
+        builder = Builder(data, dyn_fields, fields, self)
         return builder

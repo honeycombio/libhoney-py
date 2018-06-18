@@ -1,7 +1,7 @@
 class SendError(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-class NotInitializedError(Exception):
-    '''raised when global methods are called before calling init'''
+    ''' raised when send is called on an event that cannot be sent, such as:
+        - when it lacks a writekey
+        - dataset is not specified
+        - no fields are set
+    '''
     pass

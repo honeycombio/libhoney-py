@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 import libhoney.state as state
 from libhoney.fields import FieldHolder
-from libhoney.errors import SendError, NotInitializedError
+from libhoney.errors import SendError
 
 
 class Event(object):
@@ -12,20 +12,25 @@ class Event(object):
 
     def __init__(self, data={}, dyn_fields=[], fields=FieldHolder(), client=None):
         if client is None:
-            if state.G_CLIENT is None:
-                raise NotInitializedError
             client = state.G_CLIENT
 
         # copy configuration from client
         self.client = client
-        self.writekey = client.writekey
-        self.dataset = client.dataset
-        self.api_host = client.api_host
-        self.sample_rate = client.sample_rate
+        if self.client:
+            self.writekey = client.writekey
+            self.dataset = client.dataset
+            self.api_host = client.api_host
+            self.sample_rate = client.sample_rate
+        else:
+            self.writekey = None
+            self.dataset = None
+            self.api_host = 'https://api.honeycomb.io'
+            self.sample_rate = 1
 
         # populate the event's fields
         self._fields = FieldHolder()  # get an empty FH
-        self._fields += client.fields # fill it with the client fields
+        if self.client:
+            self._fields += self.client.fields # fill it with the client fields
         self._fields.add(data)        # and anything passed in
         [self._fields.add_dynamic_field(fn) for fn in dyn_fields]
         self._fields += fields

@@ -14,7 +14,9 @@ exception.
 You can find an example demonstrating usage in example.py'''
 
 import atexit
+import logging
 import random
+from six.moves.queue import Queue
 
 import libhoney.state as state
 import libhoney.transmission as transmission
@@ -22,7 +24,7 @@ from libhoney.client import Client
 from libhoney.builder import Builder
 from libhoney.event import Event
 from libhoney.fields import FieldHolder
-from libhoney.errors import NotInitializedError, SendError
+from libhoney.errors import SendError
 from libhoney.version import VERSION
 
 transmission.VERSION = VERSION
@@ -41,6 +43,8 @@ def init(writekey="", dataset="", sample_rate=1,
     `libhoney.init()` in order to ensure correct enqueueing + processing of
     events on the spawned threads.
 
+    Note that this method of initialization will be deprecated in a future
+    libhoney version. For new use cases, use `libhoney.Client`.
 
     Args:
 
@@ -88,6 +92,7 @@ def init(writekey="", dataset="", sample_rate=1,
         transmission_impl=transmission_impl,
     )
 
+
 def responses():
     '''Returns a queue from which you can read a record of response info from
     each event sent. Responses will be dicts with the following keys:
@@ -100,7 +105,11 @@ def responses():
 
     When a None object appears on the queue the reader should exit'''
     if state.G_CLIENT is None:
-        raise NotInitializedError
+        _warn_uninitialized()
+        # return an empty queue rather than None. While not ideal, it is
+        # better than returning None and introducing AttributeErrors into
+        # the caller's code
+        return Queue()
 
     return state.G_CLIENT.responses()
 
@@ -108,7 +117,8 @@ def responses():
 def add_field(name, val):
     '''add a global field. This field will be sent with every event.'''
     if state.G_CLIENT is None:
-        raise NotInitializedError
+        _warn_uninitialized()
+        return
     state.G_CLIENT.add_field(name, val)
 
 
@@ -117,14 +127,17 @@ def add_dynamic_field(fn):
        event is created. The key/value pair of the function's name and its
        return value will be sent with every event.'''
     if state.G_CLIENT is None:
-        raise NotInitializedError
+        _warn_uninitialized()
+        return
     state.G_CLIENT.add_dynamic_field(fn)
+
 
 def add(data):
     '''add takes a mappable object and adds each key/value pair to the global
        scope'''
     if state.G_CLIENT is None:
-        raise NotInitializedError
+        _warn_uninitialized()
+        return
     state.G_CLIENT.add(data)
 
 
@@ -138,7 +151,8 @@ def send_now(data):
         ev.send()
    '''
     if state.G_CLIENT is None:
-       raise NotInitializedError
+        _warn_uninitialized()
+        return
     ev = Event(client=state.G_CLIENT)
     ev.add(data)
     ev.send()
@@ -155,13 +169,18 @@ def close():
     # we should error on post-close sends
     state.G_CLIENT = None
 
+def _warn_uninitialized():
+    # warn once if we attempt to use the global state before initialized
+    log = logging.getLogger(__name__)
+    if not state.WARNED_UNINITIALIZED:
+        log.warn("global libhoney method used before initialization")
+        state.WARNED_UNINITIALIZED = True
 
 atexit.register(close) # safe because it's a no-op unless init() was called
 
 # export everything
 __all__ = [
     "Builder", "Event", "Client", "FieldHolder",
-    "NotInitializedError", "SendError",
-    "add", "add_dynamic_field", "add_field", "close",
-    "init", "responses", "send_now",
+    "SendError", "add", "add_dynamic_field", 
+    "add_field", "close", "init", "responses", "send_now",
 ]
