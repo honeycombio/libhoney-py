@@ -14,7 +14,6 @@ exception.
 You can find an example demonstrating usage in example.py'''
 
 import atexit
-import logging
 import random
 from six.moves.queue import Queue
 
@@ -105,7 +104,7 @@ def responses():
 
     When a None object appears on the queue the reader should exit'''
     if state.G_CLIENT is None:
-        _warn_uninitialized()
+        state.warn_uninitialized()
         # return an empty queue rather than None. While not ideal, it is
         # better than returning None and introducing AttributeErrors into
         # the caller's code
@@ -117,7 +116,7 @@ def responses():
 def add_field(name, val):
     '''add a global field. This field will be sent with every event.'''
     if state.G_CLIENT is None:
-        _warn_uninitialized()
+        state.warn_uninitialized()
         return
     state.G_CLIENT.add_field(name, val)
 
@@ -127,7 +126,7 @@ def add_dynamic_field(fn):
        event is created. The key/value pair of the function's name and its
        return value will be sent with every event.'''
     if state.G_CLIENT is None:
-        _warn_uninitialized()
+        state.warn_uninitialized()
         return
     state.G_CLIENT.add_dynamic_field(fn)
 
@@ -136,7 +135,7 @@ def add(data):
     '''add takes a mappable object and adds each key/value pair to the global
        scope'''
     if state.G_CLIENT is None:
-        _warn_uninitialized()
+        state.warn_uninitialized()
         return
     state.G_CLIENT.add(data)
 
@@ -151,7 +150,7 @@ def send_now(data):
         ev.send()
    '''
     if state.G_CLIENT is None:
-        _warn_uninitialized()
+        state.warn_uninitialized()
         return
     ev = Event(client=state.G_CLIENT)
     ev.add(data)
@@ -169,18 +168,11 @@ def close():
     # we should error on post-close sends
     state.G_CLIENT = None
 
-def _warn_uninitialized():
-    # warn once if we attempt to use the global state before initialized
-    log = logging.getLogger(__name__)
-    if not state.WARNED_UNINITIALIZED:
-        log.warn("global libhoney method used before initialization")
-        state.WARNED_UNINITIALIZED = True
-
 atexit.register(close) # safe because it's a no-op unless init() was called
 
 # export everything
 __all__ = [
     "Builder", "Event", "Client", "FieldHolder",
-    "SendError", "add", "add_dynamic_field", 
+    "SendError", "add", "add_dynamic_field",
     "add_field", "close", "init", "responses", "send_now",
 ]

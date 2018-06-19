@@ -77,14 +77,15 @@ class Event(object):
     def send(self):
         '''send queues this event for transmission to Honeycomb.
 
-        Raises a SendError exception when called with an uninitialized
-        libhoney. Will drop sampled events when sample_rate > 1,
+        Will drop sampled events when sample_rate > 1,
         and ensure that the Honeycomb datastore correctly considers it
         as representing `sample_rate` number of similar events.'''
+        # warn if we're not using a client instance and global libhoney
+        # is not initialized. This will result in a noop, but is better
+        # than crashing the caller if they forget to initialize
         if self.client is None:
-            # do this in addition to below to error even when sampled
-            raise SendError(
-                "Tried to send on a closed or uninitialized libhoney")
+            state.warn_uninitialized()
+            return
 
         if _should_drop(self.sample_rate):
             self.client.send_dropped_response(self)
@@ -98,7 +99,10 @@ class Event(object):
         Caller is responsible for sampling logic - will not drop any events
         for sampling. Defining a `sample_rate` will ensure that the Honeycomb
         datastore correctly considers it as representing `sample_rate` number
-        of similar events.'''
+        of similar events.
+
+        Raises SendError if no fields are defined or critical attributes not
+        set (writekey, dataset, api_host).'''
         if self._fields.is_empty():
             raise SendError(
                 "No metrics added to event. Won't send empty event.")
@@ -115,8 +119,7 @@ class Event(object):
         if self.client:
             self.client.send(self)
         else:
-            raise SendError(
-                "Tried to send on a closed or uninitialized libhoney")
+            state.warn_uninitialized()
 
     def __str__(self):
         return str(self._fields)
