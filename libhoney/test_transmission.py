@@ -1,7 +1,7 @@
 '''Tests for libhoney/transmission.py'''
 
 import libhoney
-import transmission
+import libhoney.transmission as transmission
 
 import mock
 import unittest
@@ -89,7 +89,12 @@ class TestTransmissionQueueOverflow(unittest.TestCase):
 
 
 class TestTransmissionPrivateSend(unittest.TestCase):
+    def setUp(self):
+        # reset global state with each test
+        libhoney.close()
+
     def test_batching(self):
+        libhoney.init()
         with requests_mock.Mocker() as m:
             m.post("http://urlme/1/batch/datame",
                    text=json.dumps(200 * [{"status": 202}]), status_code=200,
@@ -127,6 +132,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
 
 
     def test_grouping(self):
+        libhoney.init()
         with requests_mock.Mocker() as m:
             m.post("http://urlme/1/batch/dataset",
                    text=json.dumps(100 * [{"status": 202}]), status_code=200,
@@ -170,6 +176,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                 {"http://urlme/1/batch/dataset", "http://urlme/1/batch/alt_dataset"})
 
     def test_flush_after_timeout(self):
+        libhoney.init()
         with requests_mock.Mocker() as m:
             m.post("http://urlme/1/batch/dataset",
                    text=json.dumps(100 * [{"status": 202}]), status_code=200,

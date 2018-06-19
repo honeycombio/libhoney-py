@@ -45,12 +45,12 @@ def read_responses(resp_queue):
         status = "sending event with metadata {} took {}ms and got response code {} with message \"{}\"".format(
             resp["metadata"], resp["duration"], resp["status_code"],
             resp["body"].rstrip())
-        print status
+        print(status)
 
 
 if __name__ == "__main__":
-    libhoney.init(writekey=writekey, dataset=dataset, max_concurrent_batches=1)
-    resps = libhoney.responses()
+    hc = libhoney.Client(writekey=writekey, dataset=dataset, max_concurrent_batches=1)
+    resps = hc.responses()
     t = threading.Thread(target=read_responses, args=(resps,))
 
     # Mark this thread as a daemon so we don't wait for this thread to exit
@@ -62,18 +62,18 @@ if __name__ == "__main__":
     t.start()
 
     # Attach fields to top-level instance
-    libhoney.add_field("version", "3.4.5")
-    libhoney.add_dynamic_field(num_threads)
+    hc.add_field("version", "3.4.5")
+    hc.add_dynamic_field(num_threads)
 
     # Sends an event with "version", "num_threads", and "status" fields
-    libhoney.send_now({"status": "starting run"})
-    run_fact(1, 2, libhoney.Builder({"range": "low"}))
-    run_fact(31, 32, libhoney.Builder({"range": "high"}))
+    hc.send_now({"status": "starting run"})
+    run_fact(1, 2, hc.new_builder({"range": "low"}))
+    run_fact(31, 32, hc.new_builder({"range": "high"}))
 
     # Sends an event with "version", "num_threads", and "status" fields
-    libhoney.send_now({"status": "ending run"})
+    hc.send_now({"status": "ending run"})
 
     # Optionally tell libhoney there are no more events coming.  This ensures
     # the read_responses thread will terminate.
 
-    #libhoney.close()
+    hc.close()

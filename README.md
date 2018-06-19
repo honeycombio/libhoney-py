@@ -20,9 +20,9 @@ Honeycomb can calculate all sorts of statistics, so send the values you care abo
 import libhoney
 
 # Call init to configure libhoney
-libhoney.init(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example")
+hc = libhoney.Client(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example")
 
-libhoney.send_now({
+hc.send_now({
   "duration_ms": 153.12,
   "method": "get",
   "hostname": "appserver15",

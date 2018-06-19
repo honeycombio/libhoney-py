@@ -2,6 +2,8 @@ from tornado import ioloop, gen
 import libhoney
 from libhoney.transmission import TornadoTransmission
 
+g_hc = None
+
 def factorial(n):
     if n < 0:
         return -1 * factorial(abs(n))
@@ -23,19 +25,20 @@ def run_fact(low, high, libh_builder):
 def event_routine():
     event_counter = 1
     while event_counter <= 100:
-        run_fact(1, event_counter, libhoney.Builder({"event_counter": event_counter}))
+        run_fact(1, event_counter, g_hc.new_builder({"event_counter": event_counter}))
 
         event_counter += 1
         yield gen.sleep(0.1)
 
 @gen.coroutine
 def main():
-    libhoney.init(writekey="abcabc123123defdef456456", dataset="factorial.tornado",
+    global g_hc
+    g_hc = libhoney.Client(writekey="abcabc123123defdef456456", dataset="factorial.tornado",
         transmission_impl=TornadoTransmission())
     ioloop.IOLoop.current().spawn_callback(event_routine)
 
     while True:
-        r = yield libhoney.responses().get()
+        r = yield g_hc.responses().get()
         print("Got response: %s" % r)
 
 if __name__ == "__main__":
