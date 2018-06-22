@@ -29,6 +29,14 @@ class TestTransmissionInit(unittest.TestCase):
         self.assertEqual(t.block_on_response, True)
         t.close()
 
+    def test_user_agent_addition(self):
+        ''' ensure user_agent_addition is included in the User-Agent header '''
+        with mock.patch('transmission.requests.Session') as m_session:
+            transmission.Transmission(user_agent_addition='foo/1.0')
+            expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0"
+            m_session.return_value.headers.update.assert_called_once_with({
+                'User-Agent': expected
+            })
 
 class FakeEvent():
     def __init__(self):

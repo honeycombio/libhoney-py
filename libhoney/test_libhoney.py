@@ -46,7 +46,7 @@ class TestGlobalScope(unittest.TestCase):
             self.assertEqual(libhoney.state.G_CLIENT.xmit, ft)
             self.assertEqual(libhoney.state.G_CLIENT._responses, None)
             m_xmit.assert_called_with(
-                5, False, True)
+                5, False, True, '')
 
     def test_close(self):
         mock_client = mock.Mock()
