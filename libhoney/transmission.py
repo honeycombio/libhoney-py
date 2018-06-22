@@ -9,8 +9,7 @@ import statsd
 import time
 import collections
 import concurrent.futures
-
-VERSION = "unset"  # set by libhoney
+from libhoney.version import VERSION
 
 try:
     from tornado import ioloop, gen
@@ -27,15 +26,20 @@ destination = collections.namedtuple("destination",
 
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
-                 block_on_response=False, max_batch_size=100, send_frequency=0.25):
+                 block_on_response=False, max_batch_size=100, send_frequency=0.25,
+                 user_agent_addition=''):
         self.max_concurrent_batches = max_concurrent_batches
         self.block_on_send = block_on_send
         self.block_on_response = block_on_response
         self.max_batch_size = max_batch_size
         self.send_frequency = send_frequency
 
+        user_agent = "libhoney-py/" + VERSION
+        if user_agent_addition:
+            user_agent += " " + user_agent_addition
+
         session = requests.Session()
-        session.headers.update({"User-Agent": "libhoney-py/"+VERSION})
+        session.headers.update({"User-Agent": user_agent})
         self.session = session
 
         # libhoney adds events to the pending queue for us to send
@@ -191,7 +195,8 @@ if has_tornado:
 
     class TornadoTransmission():
         def __init__(self, max_concurrent_batches=10, block_on_send=False,
-                    block_on_response=False, max_batch_size=100, send_frequency=0.25):
+                    block_on_response=False, max_batch_size=100, send_frequency=0.25,
+                    user_agent_addition=''):
             if not has_tornado:
                 raise ImportError('TornadoTransmission requires tornado, but it was not found.')
 
@@ -200,9 +205,13 @@ if has_tornado:
             self.max_batch_size = max_batch_size
             self.send_frequency = send_frequency
 
+            user_agent = "libhoney-py/" + VERSION
+            if user_agent_addition:
+                user_agent += " " + user_agent_addition
+
             self.http_client = AsyncHTTPClient(
                 force_instance=True,
-                defaults=dict(user_agent="libhoney-py/"+VERSION))
+                defaults=dict(user_agent=user_agent))
 
             # libhoney adds events to the pending queue for us to send
             self.pending = Queue(maxsize=1000)

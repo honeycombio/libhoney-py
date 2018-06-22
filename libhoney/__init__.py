@@ -18,15 +18,11 @@ import random
 from six.moves.queue import Queue
 
 import libhoney.state as state
-import libhoney.transmission as transmission
 from libhoney.client import Client
 from libhoney.builder import Builder
 from libhoney.event import Event
 from libhoney.fields import FieldHolder
 from libhoney.errors import SendError
-from libhoney.version import VERSION
-
-transmission.VERSION = VERSION
 
 random.seed()
 

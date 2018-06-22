@@ -50,17 +50,23 @@ class Client(object):
             false, drop response objects.
     - `transmission_impl`: if set, override the default transmission implementation
             (for example, TornadoTransmission)
+    - `user_agent_addition`: if set, its contents will be appended to the
+            User-Agent string, separated by a space. The expected format is
+            product-name/version, eg "myapp/1.0"
     '''
     def __init__(self, writekey="", dataset="", sample_rate=1,
                  api_host="https://api.honeycomb.io",
                  max_concurrent_batches=10, max_batch_size=100,
                  send_frequency=0.25, block_on_send=False,
-                 block_on_response=False, transmission_impl=None):
+                 block_on_response=False, transmission_impl=None,
+                 user_agent_addition=''):
 
         self.xmit = transmission_impl
         if self.xmit is None:
             self.xmit = Transmission(
-                max_concurrent_batches, block_on_send, block_on_response)
+                max_concurrent_batches, block_on_send, block_on_response,
+                user_agent_addition
+            )
 
         self.xmit.start()
         self.writekey = writekey
