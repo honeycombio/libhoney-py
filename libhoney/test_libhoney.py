@@ -8,6 +8,7 @@ import unittest
 import libhoney
 from libhoney.errors import SendError
 
+
 def sample_dyn_fn():
     return "dyna", "magic"
 
@@ -37,8 +38,8 @@ class TestGlobalScope(unittest.TestCase):
         with mock.patch('libhoney.client.Transmission') as m_xmit:
             m_xmit.return_value = ft
             libhoney.init(writekey="wk", dataset="ds", sample_rate=3,
-                        api_host="uuu", max_concurrent_batches=5,
-                        block_on_response=True)
+                          api_host="uuu", max_concurrent_batches=5,
+                          block_on_response=True)
             self.assertEqual(libhoney.state.G_CLIENT.writekey, "wk")
             self.assertEqual(libhoney.state.G_CLIENT.dataset, "ds")
             self.assertEqual(libhoney.state.G_CLIENT.api_host, "uuu")
@@ -46,7 +47,9 @@ class TestGlobalScope(unittest.TestCase):
             self.assertEqual(libhoney.state.G_CLIENT.xmit, ft)
             self.assertEqual(libhoney.state.G_CLIENT._responses, None)
             m_xmit.assert_called_with(
-                5, False, True, '')
+                block_on_response=True, block_on_send=False,
+                max_concurrent_batches=5, user_agent_addition=''
+            )
 
     def test_close(self):
         mock_client = mock.Mock()
@@ -63,7 +66,7 @@ class TestGlobalScope(unittest.TestCase):
             libhoney.close()
         except AttributeError:
             self.fail('libhoney threw an exception on '
-                           'an uninitialized close.')
+                      'an uninitialized close.')
 
     def test_add_field(self):
         libhoney.init()
@@ -108,13 +111,16 @@ class TestFieldHolder(unittest.TestCase):
     def test_add_dynamic_field(self):
         libhoney.init()
         expected_dyn_fns = set()
-        self.assertEqual(libhoney.state.G_CLIENT.fields._dyn_fields, expected_dyn_fns)
+        self.assertEqual(
+            libhoney.state.G_CLIENT.fields._dyn_fields, expected_dyn_fns)
         libhoney.add_dynamic_field(sample_dyn_fn)
         expected_dyn_fns.add(sample_dyn_fn)
-        self.assertEqual(libhoney.state.G_CLIENT.fields._dyn_fields, expected_dyn_fns)
+        self.assertEqual(
+            libhoney.state.G_CLIENT.fields._dyn_fields, expected_dyn_fns)
         # adding a second time should still only have one element
         libhoney.add_dynamic_field(sample_dyn_fn)
-        self.assertEqual(libhoney.state.G_CLIENT.fields._dyn_fields, expected_dyn_fns)
+        self.assertEqual(
+            libhoney.state.G_CLIENT.fields._dyn_fields, expected_dyn_fns)
         with self.assertRaises(TypeError):
             libhoney.add_dynamic_field("foo")
 
@@ -227,12 +233,14 @@ class TestEvent(unittest.TestCase):
         libhoney.init()
 
         class fakeDate:
-                def setNow(self, time):
-                    self.time = time
-                def now(self):
-                    return self.time
-                def utcnow(self):
-                    return self.time
+            def setNow(self, time):
+                self.time = time
+
+            def now(self):
+                return self.time
+
+            def utcnow(self):
+                return self.time
 
         with mock.patch('libhoney.event.datetime') as m_datetime:
             fakeStart = datetime.datetime(2016, 1, 2, 3, 4, 5, 6)
@@ -249,7 +257,7 @@ class TestEvent(unittest.TestCase):
     def test_str(self):
         libhoney.init()
         ev = libhoney.Event()
-        ev.add_field("obj", { "a": 1 })
+        ev.add_field("obj", {"a": 1})
         ev.add_field("string", "a:1")
         ev.add_field("number", 5)
         ev.add_field("boolean", True)
