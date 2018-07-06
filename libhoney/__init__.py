@@ -152,6 +152,16 @@ def send_now(data):
     ev.add(data)
     ev.send()
 
+def flush():
+    '''Closes and restarts the transmission, sending all events. Use this
+    if you want to perform a blocking send of all events in your
+    application.
+
+    Note: does not work with asynchronous Transmission implementations such
+    as TornadoTransmission.
+    '''
+    if state.G_CLIENT:
+        state.G_CLIENT.flush()
 
 def close():
     '''Wait for in-flight events to be transmitted then shut down cleanly.
