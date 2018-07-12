@@ -173,6 +173,19 @@ class Client(object):
         # we should error on post-close sends
         self.xmit = None
 
+
+    def flush(self):
+        '''Closes and restarts the transmission, sending all events. Use this
+        if you want to perform a blocking send of all events in your
+        application.
+
+        Note: does not work with asynchronous Transmission implementations such
+        as TornadoTransmission.
+        '''
+        if self.xmit and isinstance(self.xmit, Transmission):
+            self.xmit.close()
+            self.xmit.start()
+
     def new_event(self, data={}):
         '''Return an Event, initialized to be sent with this client'''
         ev = Event(data=data, client=self)

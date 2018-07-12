@@ -162,3 +162,28 @@ class TestClient(unittest.TestCase):
         mock_xmit = mock.Mock()
         with client.Client(transmission_impl=mock_xmit) as c:
             self.assertEqual(c.xmit, mock_xmit)
+
+class TestClientFlush(unittest.TestCase):
+    ''' separate test class because we don't want to mock transmission'''
+    def test_flush(self):
+        mock_xmit = mock.Mock(spec=libhoney.transmission.Transmission)
+        with client.Client(transmission_impl=mock_xmit) as c:
+            # start gets called when the class is initialized
+            mock_xmit.start.assert_called_once_with()
+            mock_xmit.reset_mock()
+            c.flush()
+
+            mock_xmit.close.assert_called_once_with()
+            mock_xmit.start.assert_called_once_with()
+
+        mock_xmit = mock.Mock(spec=libhoney.transmission.TornadoTransmission)
+        with client.Client(transmission_impl=mock_xmit) as c:
+            # start gets called when the class is initialized
+            mock_xmit.start.assert_called_once_with()
+            mock_xmit.reset_mock()
+            c.flush()
+
+            # we don't call close/start on TornadoTransmission because we can't
+            # force a flush in an async environment.
+            mock_xmit.close.assert_not_called()
+            mock_xmit.start.assert_not_called()
