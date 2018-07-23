@@ -6,6 +6,7 @@ import json
 import threading
 import requests
 import statsd
+import sys
 import time
 import collections
 import concurrent.futures
@@ -387,6 +388,54 @@ if has_tornado:
             objects from each event send'''
             return self.responses
 
+class FileTransmission():
+    ''' Transmission implementation that writes to a file object
+    rather than sending events to Honeycomb. Defaults to STDERR. '''
+    def __init__(self, user_agent_addition='', output=sys.stderr):
+        self._output = output
+
+        self._user_agent = "libhoney-py/" + VERSION
+        if user_agent_addition:
+            self._user_agent += " " + user_agent_addition
+
+    def start(self):
+        ''' start is defined to be consistent with the Transmission API but
+        does nothing '''
+        pass
+
+    def send(self, ev):
+        '''send accepts an event and writes it to the configured output file'''
+        event_time = ev.created_at.isoformat()
+        if ev.created_at.tzinfo is None:
+            event_time += "Z"
+
+        # we add dataset and user_agent to the payload
+        # if processed by another honeycomb agent (i.e. agentless integrations
+        # for AWS), this data will get used to route the event to the right
+        # location with appropriate metadata
+        payload = {
+            "time": event_time,
+            "samplerate": ev.sample_rate,
+            "dataset": ev.dataset,
+            "user_agent": self._user_agent,
+            "data": ev.fields(),
+        }
+        self._output.write(json.dumps(payload) + "\n")
+
+    def close(self):
+        '''Exists to be consistent with the Transmission API, but does nothing
+        '''
+        pass
+
+    def flush(self):
+        '''Exists to be consistent with the Transmission API, but does nothing
+        '''
+        pass
+
+    def get_response_queue(self):
+        '''Not implemented in FileTransmission - you should not attempt to
+        inspect the response queue when using this type.'''
+        pass
 
 def group_events_by_destination(events):
     ''' Events all get added to a single queue when you call send(), but you

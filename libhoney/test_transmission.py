@@ -2,6 +2,7 @@
 
 import libhoney
 import libhoney.transmission as transmission
+from libhoney.version import VERSION
 
 import mock
 import unittest
@@ -205,3 +206,32 @@ class TestTransmissionPrivateSend(unittest.TestCase):
             resp = t.responses.get()
             assert resp["status_code"] == 202
             t.close()
+
+class TestFileTransmissionSend(unittest.TestCase):
+    def test_send(self):
+        t = transmission.FileTransmission(user_agent_addition='test')
+        t._output = mock.Mock()
+        ev = mock.Mock()
+        ev.fields.return_value = {'abc': 1, 'xyz': 2}
+        ev.sample_rate = 2.0
+        ev.dataset = "exciting-dataset!"
+        ev.user_agent = "libhoney-py/" + VERSION + " test"
+        ev.created_at = datetime.datetime.now()
+
+        expected_event_time = ev.created_at.isoformat()
+        if ev.created_at.tzinfo is None:
+            expected_event_time += "Z"
+
+        expected_payload = {
+            "data": {'abc': 1, 'xyz': 2},
+            "samplerate": 2.0,
+            "dataset": "exciting-dataset!",
+            "time": expected_event_time,
+            "user_agent": ev.user_agent,
+        }
+        t.send(ev)
+        # hard to compare json because dict ordering is not determanistic,
+        # so convert back to dict
+        args, _  = t._output.write.call_args
+        actual_payload = json.loads(args[0])
+        self.assertDictEqual(actual_payload, expected_payload)
