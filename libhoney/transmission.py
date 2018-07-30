@@ -430,7 +430,7 @@ class FileTransmission():
     def flush(self):
         '''Exists to be consistent with the Transmission API, but does nothing
         '''
-        pass
+        self._output.flush()
 
     def get_response_queue(self):
         '''Not implemented in FileTransmission - you should not attempt to
