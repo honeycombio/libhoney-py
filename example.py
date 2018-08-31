@@ -42,9 +42,9 @@ def read_responses(resp_queue):
         # libhoney will enqueue a None value after we call libhoney.close()
         if resp is None:
             break
-        status = "sending event with metadata {} took {}ms and got response code {} with message \"{}\"".format(
+        status = "sending event with metadata {} took {}ms and got response code {} with message \"{}\" and error message \"{}\"".format(
             resp["metadata"], resp["duration"], resp["status_code"],
-            resp["body"].rstrip())
+            resp["body"].rstrip(), resp["error"])
         print(status)
 
 
