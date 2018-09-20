@@ -48,7 +48,8 @@ class TestGlobalScope(unittest.TestCase):
             self.assertEqual(libhoney.state.G_CLIENT._responses, None)
             m_xmit.assert_called_with(
                 block_on_response=True, block_on_send=False,
-                max_concurrent_batches=5, user_agent_addition=''
+                max_concurrent_batches=5, user_agent_addition='',
+                verbose_mode=False,
             )
 
     def test_close(self):

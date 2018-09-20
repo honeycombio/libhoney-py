@@ -30,7 +30,8 @@ random.seed()
 def init(writekey="", dataset="", sample_rate=1,
          api_host="https://api.honeycomb.io", max_concurrent_batches=10,
          max_batch_size=100, send_frequency=0.25,
-         block_on_send=False, block_on_response=False, transmission_impl=None):
+         block_on_send=False, block_on_response=False, transmission_impl=None,
+         verbose_mode=False):
     '''Initialize libhoney and prepare it to send events to Honeycomb.
 
     Note that libhoney initialization initializes a number of threads to handle
@@ -85,6 +86,7 @@ def init(writekey="", dataset="", sample_rate=1,
         block_on_send=block_on_send,
         block_on_response=block_on_response,
         transmission_impl=transmission_impl,
+        verbose_mode=verbose_mode,
     )
 
 
