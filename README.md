@@ -18,16 +18,23 @@ Honeycomb can calculate all sorts of statistics, so send the values you care abo
 
 ```python
 import libhoney
-
 # Call init to configure libhoney
-hc = libhoney.Client(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example")
+libhoney.init(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example", sample_rate=1)
 
-hc.send_now({
-  "duration_ms": 153.12,
+# create a new event
+ev = libhoney.new_event()
+# add data up front
+ev.add({
   "method": "get",
   "hostname": "appserver15",
   "payload_length": 27
 })
+
+# do some work, maybe take some measurements
+
+# add another field
+ev.add_field("duration_ms", 153.12)
+ev.send()
 ```
 
 You can find a more complete example demonstrating usage in [`example.py`](example.py)

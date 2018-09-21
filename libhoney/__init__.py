@@ -135,16 +135,25 @@ def add(data):
         return
     state.G_CLIENT.add(data)
 
+def new_event(data={}):
+    ''' Creates a new event with the default client. If libhoney has not been
+    initialized, sending this event will be a no-op.
+    '''
+    return Event(data=data, client=state.G_CLIENT)
 
 def send_now(data):
-    '''creates an event with the data passed in and sends it immediately.
+    '''
+    DEPRECATED - This will likely be removed in a future major version.
+
+    Creates an event with the data passed in and enqueues it to be sent.
+    Contrary to the name, it does not block the application when called.
 
     Shorthand for:
 
         ev = Event()
         ev.add(data)
         ev.send()
-   '''
+    '''
     if state.G_CLIENT is None:
         state.warn_uninitialized()
         return

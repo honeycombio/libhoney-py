@@ -131,8 +131,11 @@ class Client(object):
         self.xmit.send(event)
 
     def send_now(self, data):
-        '''creates an event with the data passed in and sends it immediately
-        with the current client.
+        '''
+        DEPRECATED - This will likely be removed in a future major version.
+
+        Creates an event with the data passed in and enqueues it to be sent.
+        Contrary to the name, it does not block the application when called.
 
         Shorthand for:
 

@@ -18,7 +18,7 @@ class HoneyMiddleware(object):
     def process_response(self, request, response):
         response_time = time.time() - request.start_time
 
-        libhoney.send_now({
+        ev = libhoney.new_event(data={
             "method": request.method,
             "scheme": request.scheme,
             "path": request.path,
@@ -31,6 +31,7 @@ class HoneyMiddleware(object):
             "ip": request.META['REMOTE_ADDR'],
             "responseTime_ms": response_time * 1000,
         })
+        ev.send()
 
         return response
 
