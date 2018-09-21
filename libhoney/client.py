@@ -3,7 +3,6 @@ from six.moves import queue
 from libhoney.event import Event
 from libhoney.builder import Builder
 from libhoney.fields import FieldHolder
-from libhoney.errors import SendError
 from libhoney.transmission import Transmission
 
 class Client(object):
@@ -150,10 +149,12 @@ class Client(object):
             ev.send()
         '''
         if self.xmit is None:
-            raise SendError(
-                "Tried to send on a closed or uninitialized libhoney client")
+            self.log(
+                "tried to send on a closed or uninitialized libhoney client,"
+                " ev = %s", event.fields())
+            return
 
-        self.log("enqueuing event ev = %s", event.fields())
+        self.log("send enqueuing event ev = %s", event.fields())
         self.xmit.send(event)
 
     def send_now(self, data):
@@ -171,7 +172,7 @@ class Client(object):
         '''
         ev = self.new_event()
         ev.add(data)
-        self.log("enqueuing event ev = %s", ev.fields())
+        self.log("send_now enqueuing event ev = %s", ev.fields())
         ev.send()
 
     def send_dropped_response(self, event):

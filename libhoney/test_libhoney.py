@@ -6,7 +6,6 @@ import mock
 import unittest
 
 import libhoney
-from libhoney.errors import SendError
 
 
 def sample_dyn_fn():
@@ -277,25 +276,9 @@ class TestEvent(unittest.TestCase):
             ev = libhoney.Event()
             # override inherited api_host from client
             ev.api_host = ""
-            with self.assertRaises(SendError) as c1:
-                ev.send()
-            self.assertTrue("No metrics added to event. Won't send empty event." in
-                            str(c1.exception))
             ev.add_field("f", "g")
-            with self.assertRaises(SendError) as c2:
-                ev.send()
-            self.assertTrue("No api_host for Honeycomb."
-                            in str(c2.exception))
             ev.api_host = "myhost"
-            with self.assertRaises(SendError) as c2:
-                ev.send()
-            self.assertTrue("No writekey specified." in
-                            str(c2.exception))
             ev.writekey = "letmewrite"
-            with self.assertRaises(SendError) as c2:
-                ev.send()
-            self.assertTrue("No dataset for Honeycomb." in
-                            str(c2.exception))
             ev.dataset = "storeme"
             ev.send()
             m_xmit.return_value.send.assert_called_with(ev)
