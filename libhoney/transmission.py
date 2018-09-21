@@ -28,7 +28,7 @@ destination = collections.namedtuple("destination",
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
                  block_on_response=False, max_batch_size=100, send_frequency=0.25,
-                 user_agent_addition=''):
+                 user_agent_addition='', debug=False):
         self.max_concurrent_batches = max_concurrent_batches
         self.block_on_send = block_on_send
         self.block_on_response = block_on_response
@@ -50,6 +50,24 @@ class Transmission():
 
         self._sending_thread = None
         self.sd = statsd.StatsClient(prefix="libhoney")
+
+        self.debug = debug
+        if debug:
+            self._init_logger()
+
+    def _init_logger(self):
+        import logging
+        self._logger = logging.getLogger('honeycomb-sdk-xmit')
+        self._logger.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        self._logger.addHandler(ch)
+
+    def log(self, msg, *args, **kwargs):
+        if self.debug:
+            self._logger.debug(msg, *args, **kwargs)
 
     def start(self):
         self._sending_thread = threading.Thread(target=self._sender)
@@ -133,16 +151,18 @@ class Transmission():
                     "time": event_time,
                     "samplerate": ev.sample_rate,
                     "data": ev.fields()})
+
+            self.log("firing batch, size = %d", len(payload))
             resp = self.session.post(
                 url,
                 headers={"X-Honeycomb-Team": destination.writekey, "Content-Type": "application/json"},
                 data=json.dumps(payload))
             status_code = resp.status_code
             resp.raise_for_status()
-            statuses = [d["status"] for d in resp.json()]
+            statuses = [{"status": d.get("status"), "error": d.get("error")} for d in resp.json()]
             for ev, status in zip(events, statuses):
-                self._enqueue_response(status, "", None, start, ev.metadata)
-                self.sd.incr("messages_sent")
+                self._enqueue_response(status.get("status"), "", status.get("error"), start, ev.metadata)
+
         except Exception as e:
             # Catch all exceptions and hand them to the responses queue.
             self._enqueue_errors(status_code, e, start, events)
@@ -160,6 +180,7 @@ class Transmission():
             "duration": (time.time() - start) * 1000,
             "metadata": metadata
         }
+        self.log("enqueuing response = %s", resp)
         if self.block_on_response:
             self.responses.put(resp)
         else:

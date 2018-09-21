@@ -19,7 +19,7 @@ Honeycomb can calculate all sorts of statistics, so send the values you care abo
 ```python
 import libhoney
 # Call init to configure libhoney
-libhoney.init(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example", sample_rate=1)
+libhoney.init(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example", sample_rate=1, debug=True)
 
 # create a new event
 ev = libhoney.new_event()

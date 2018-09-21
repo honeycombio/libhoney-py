@@ -3,7 +3,6 @@ from six.moves import queue
 from libhoney.event import Event
 from libhoney.builder import Builder
 from libhoney.fields import FieldHolder
-from libhoney.errors import SendError
 from libhoney.transmission import Transmission
 
 class Client(object):
@@ -59,13 +58,13 @@ class Client(object):
                  max_concurrent_batches=10, max_batch_size=100,
                  send_frequency=0.25, block_on_send=False,
                  block_on_response=False, transmission_impl=None,
-                 user_agent_addition=''):
+                 user_agent_addition='', debug=False):
 
         self.xmit = transmission_impl
         if self.xmit is None:
             self.xmit = Transmission(
                 max_concurrent_batches=max_concurrent_batches, block_on_send=block_on_send, block_on_response=block_on_response,
-                user_agent_addition=user_agent_addition
+                user_agent_addition=user_agent_addition, debug=debug,
             )
 
         self.xmit.start()
@@ -78,6 +77,17 @@ class Client(object):
 
         self.fields = FieldHolder()
 
+        self.debug = debug
+        if debug:
+            self._init_logger()
+
+        self.log('initialized honeycomb client: writekey=%s dataset=%s',
+                 writekey, dataset)
+        if not writekey:
+            self.log('writekey not set! set the writekey if you want to send data to honeycomb')
+        if not dataset:
+            self.log('dataset not set! set a value for dataset if you want to send data to honeycomb')
+
     # enable use in a context manager
     def __enter__(self):
         return self
@@ -85,6 +95,20 @@ class Client(object):
     def __exit__(self, typ, value, tb):
         '''Clean up Transmission if client gets garbage collected'''
         self.close()
+
+    def _init_logger(self):
+        import logging
+        self._logger = logging.getLogger('honeycomb-sdk')
+        self._logger.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        self._logger.addHandler(ch)
+
+    def log(self, msg, *args, **kwargs):
+        if self.debug:
+            self._logger.debug(msg, *args, **kwargs)
 
     def responses(self):
         '''Returns a queue from which you can read a record of response info from
@@ -125,9 +149,12 @@ class Client(object):
             ev.send()
         '''
         if self.xmit is None:
-            raise SendError(
-                "Tried to send on a closed or uninitialized libhoney client")
+            self.log(
+                "tried to send on a closed or uninitialized libhoney client,"
+                " ev = %s", event.fields())
+            return
 
+        self.log("send enqueuing event ev = %s", event.fields())
         self.xmit.send(event)
 
     def send_now(self, data):
@@ -145,6 +172,7 @@ class Client(object):
         '''
         ev = self.new_event()
         ev.add(data)
+        self.log("send_now enqueuing event ev = %s", ev.fields())
         ev.send()
 
     def send_dropped_response(self, event):
@@ -156,6 +184,7 @@ class Client(object):
             "body": "",
             "error": "event dropped due to sampling",
         }
+        self.log("enqueuing response = %s", response)
         try:
             if self.block_on_response:
                 self._responses.put(response)

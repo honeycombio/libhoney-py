@@ -4,7 +4,6 @@ from contextlib import contextmanager
 
 import libhoney.state as state
 from libhoney.fields import FieldHolder
-from libhoney.errors import SendError
 
 
 class Event(object):
@@ -104,17 +103,18 @@ class Event(object):
         Raises SendError if no fields are defined or critical attributes not
         set (writekey, dataset, api_host).'''
         if self._fields.is_empty():
-            raise SendError(
-                "No metrics added to event. Won't send empty event.")
+            self.client.log("No metrics added to event. Won't send empty event.")
+            return
         if self.api_host == "":
-            raise SendError(
-                "No api_host for Honeycomb. Can't send to the Great Unknown.")
+            self.client.log("No api_host for Honeycomb. Can't send to the Great Unknown.")
+            return
         if self.writekey == "":
-            raise SendError(
-                "No writekey specified. Can't send event.")
+            self.client.log("No writekey specified. Can't send event.")
+            return
         if self.dataset == "":
-            raise SendError(
+            self.client.log(
                 "No dataset for Honeycomb. Can't send event without knowing which dataset it belongs to.")
+            return
 
         if self.client:
             self.client.send(self)
