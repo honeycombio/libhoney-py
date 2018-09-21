@@ -59,13 +59,13 @@ class Client(object):
                  max_concurrent_batches=10, max_batch_size=100,
                  send_frequency=0.25, block_on_send=False,
                  block_on_response=False, transmission_impl=None,
-                 user_agent_addition='', verbose_mode=False):
+                 user_agent_addition='', debug=False):
 
         self.xmit = transmission_impl
         if self.xmit is None:
             self.xmit = Transmission(
                 max_concurrent_batches=max_concurrent_batches, block_on_send=block_on_send, block_on_response=block_on_response,
-                user_agent_addition=user_agent_addition, verbose_mode=verbose_mode,
+                user_agent_addition=user_agent_addition, debug=debug,
             )
 
         self.xmit.start()
@@ -78,8 +78,8 @@ class Client(object):
 
         self.fields = FieldHolder()
 
-        self.verbose_mode = verbose_mode
-        if verbose_mode:
+        self.debug = debug
+        if debug:
             self._init_logger()
 
         self.log('initialized honeycomb client: writekey=%s dataset=%s',
@@ -108,7 +108,7 @@ class Client(object):
         self._logger.addHandler(ch)
 
     def log(self, msg, *args, **kwargs):
-        if self.verbose_mode:
+        if self.debug:
             self._logger.debug(msg, *args, **kwargs)
 
     def responses(self):

@@ -28,7 +28,7 @@ destination = collections.namedtuple("destination",
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
                  block_on_response=False, max_batch_size=100, send_frequency=0.25,
-                 user_agent_addition='', verbose_mode=False):
+                 user_agent_addition='', debug=False):
         self.max_concurrent_batches = max_concurrent_batches
         self.block_on_send = block_on_send
         self.block_on_response = block_on_response
@@ -51,8 +51,8 @@ class Transmission():
         self._sending_thread = None
         self.sd = statsd.StatsClient(prefix="libhoney")
 
-        self.verbose_mode = verbose_mode
-        if verbose_mode:
+        self.debug = debug
+        if debug:
             self._init_logger()
 
     def _init_logger(self):
@@ -66,7 +66,7 @@ class Transmission():
         self._logger.addHandler(ch)
 
     def log(self, msg, *args, **kwargs):
-        if self.verbose_mode:
+        if self.debug:
             self._logger.debug(msg, *args, **kwargs)
 
     def start(self):
