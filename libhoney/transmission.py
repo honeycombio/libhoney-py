@@ -54,7 +54,7 @@ class Transmission():
         self.verbose_mode = verbose_mode
         if verbose_mode:
             self._init_logger()
-    
+
     def _init_logger(self):
         import logging
         self._logger = logging.getLogger('honeycomb-sdk-xmit')
@@ -159,10 +159,10 @@ class Transmission():
                 data=json.dumps(payload))
             status_code = resp.status_code
             resp.raise_for_status()
-            statuses = [d["status"] for d in resp.json()]
+            statuses = [{"status": d.get("status"), "error": d.get("error")} for d in resp.json()]
             for ev, status in zip(events, statuses):
-                self._enqueue_response(status, "", None, start, ev.metadata)
-                self.sd.incr("messages_sent")
+                self._enqueue_response(status.get("status"), "", status.get("error"), start, ev.metadata)
+
         except Exception as e:
             # Catch all exceptions and hand them to the responses queue.
             self._enqueue_errors(status_code, e, start, events)
