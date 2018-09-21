@@ -1,43 +1,9 @@
 # libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-py.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-py) [![PyPi version](https://badge.fury.io/py/libhoney.svg)](https://badge.fury.io/py/libhoney)
 
-Python library for sending events to [Honeycomb](https://honeycomb.io). (For more information, see the [Honeycomb documentation](https://honeycomb.io/docs) and [Python SDK guide](https://honeycomb.io/docs/connect/python).)
+Python library for sending events to [Honeycomb](https://honeycomb.io), a service for debugging your software in production.
 
-## Installation
-
-```
-pip install libhoney
-```
-
-## Documentation
-
-An API reference is available at https://honeycombio.github.io/libhoney-py/
-
-## Example
-
-Honeycomb can calculate all sorts of statistics, so send the values you care about and let us crunch the averages, percentiles, lower/upper bounds, cardinality -- whatever you want -- for you.
-
-```python
-import libhoney
-# Call init to configure libhoney
-libhoney.init(writekey="YOUR_WRITE_KEY", dataset="honeycomb-python-example", sample_rate=1, debug=True)
-
-# create a new event
-ev = libhoney.new_event()
-# add data up front
-ev.add({
-  "method": "get",
-  "hostname": "appserver15",
-  "payload_length": 27
-})
-
-# do some work, maybe take some measurements
-
-# add another field
-ev.add_field("duration_ms", 153.12)
-ev.send()
-```
-
-You can find a more complete example demonstrating usage in [`example.py`](example.py)
+- [Usage and Examples](https://docs.honeycomb.io/sdk/python/)
+- [API Reference](https://honeycombio.github.io/libhoney-py/)
 
 ## Contributions
 
