@@ -48,9 +48,18 @@ class Builder(object):
         self._fields.add(data)
 
     def send_now(self, data):
-        '''creates an event from this builder with the data passed in and sends
-           it immediately. Shorthand for
-           `ev = builder.new_event(); ev.add(data); ev.send()`'''
+        '''
+        DEPRECATED - This will likely be removed in a future major version.
+
+        Creates an event with the data passed in and enqueues it to be sent.
+        Contrary to the name, it does not block the application when called.
+
+        Shorthand for:
+
+            ev = builder.new_event()
+            ev.add(data)
+            ev.send()
+        '''
         ev = self.new_event()
         ev.add(data)
         ev.send()

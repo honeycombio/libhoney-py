@@ -1,5 +1,6 @@
 '''This example shows how to use some of the features of libhoney in python'''
 
+import datetime
 import libhoney
 import signal
 import threading
@@ -31,8 +32,8 @@ def run_fact(low, high, libh_builder):
         with ev.timer("fact"):
             res = factorial(10 + i)
             ev.add_field("retval", res)
-        ev.send()
         print("About to send event: %s" % ev)
+        ev.send()
 
 
 def read_responses(resp_queue):
@@ -65,15 +66,19 @@ if __name__ == "__main__":
     hc.add_field("version", "3.4.5")
     hc.add_dynamic_field(num_threads)
 
-    # Sends an event with "version", "num_threads", and "status" fields
-    hc.send_now({"status": "starting run"})
-    run_fact(1, 2, hc.new_builder({"range": "low"}))
-    run_fact(31, 32, hc.new_builder({"range": "high"}))
+    ev = hc.new_event()
+    ev.add_field("start_time", datetime.datetime.now().isoformat())
 
-    # Sends an event with "version", "num_threads", and "status" fields
-    hc.send_now({"status": "ending run"})
+    # wrap our calls with timers
+    with ev.timer(name="run_fact_1_2_dur_ms"):
+        run_fact(1, 2, hc.new_builder({"range": "low"}))
+    with ev.timer(name="run_fact_31_32_dur_ms"):
+        run_fact(31, 32, hc.new_builder({"range": "high"}))
+    ev.add_field("end_time", datetime.datetime.now().isoformat())
+    # sends event with fields: version, num_threads, start_time, end_time,
+    # run_fact_1_2_dur_ms, run_fact_31_32_dur_ms
+    ev.send()
 
     # Optionally tell libhoney there are no more events coming.  This ensures
     # the read_responses thread will terminate.
-
     hc.close()

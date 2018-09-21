@@ -9,7 +9,7 @@ class HoneyMiddleware(object):
 
 
     def process_request(self, request):
-        libhoney.send_now({
+        ev = libhoney.new_event(data={
             "method": request.method,
             "scheme": request.scheme,
             "path": request.path,
@@ -21,6 +21,7 @@ class HoneyMiddleware(object):
             "host": request.get_host(),
             "ip": request.META['REMOTE_ADDR'],
         })
+        ev.send()
 
         return None
 
