@@ -113,17 +113,17 @@ class Transmission():
                     ev = self.pending.get(timeout=self.send_frequency)
                     if ev is None:
                         # signals shutdown
-                        pool.submit(self._flush, events)
+                        _safe_submit(pool, self._flush, events)
                         pool.shutdown()
                         return
                     events.append(ev)
                     if (len(events) > self.max_batch_size or
                             time.time() - last_flush > self.send_frequency):
-                        pool.submit(self._flush, events)
+                        _safe_submit(pool, self._flush, events)
                         events = []
                         last_flush = time.time()
                 except queue.Empty:
-                    pool.submit(self._flush, events)
+                    _safe_submit(pool, self._flush, events)
                     events = []
                     last_flush = time.time()
 
@@ -467,3 +467,15 @@ def group_events_by_destination(events):
     for ev in events:
         ret[destination(ev.writekey, ev.dataset, ev.api_host)].append(ev)
     return ret
+
+def _safe_submit(pool, *args, **kwargs):
+    # because we're running as a daemon thread, it's possible
+    # that submit can be called as the application is being
+    # shut down - this leads to a RuntimeError that can leak
+    # The clean remedy for this is to call `libhoney.close(),
+    # before shutting down, but as a last resort we can just
+    # silently discard the error
+    try:
+        pool.submit(*args, **kwargs)
+    except RuntimeError:
+        pass
