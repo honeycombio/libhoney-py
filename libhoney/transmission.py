@@ -156,7 +156,9 @@ class Transmission():
             resp = self.session.post(
                 url,
                 headers={"X-Honeycomb-Team": destination.writekey, "Content-Type": "application/json"},
-                data=json.dumps(payload))
+                data=json.dumps(payload),
+                timeout=10.0,
+            )
             status_code = resp.status_code
             resp.raise_for_status()
             statuses = [{"status": d.get("status"), "error": d.get("error")} for d in resp.json()]
