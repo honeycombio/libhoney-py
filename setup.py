@@ -23,7 +23,7 @@ setup(name='libhoney',
         'pbr',
         'requests-mock',
         'bumpversion',
-        'tornado',
+        'tornado>=5.0,<6.0',
       ],
       test_suite='libhoney',
       zip_safe=False)
