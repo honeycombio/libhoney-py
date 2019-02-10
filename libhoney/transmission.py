@@ -2,7 +2,6 @@
 
 from six.moves import queue
 from six.moves.urllib.parse import urljoin
-import datetime
 import json
 import threading
 import requests
