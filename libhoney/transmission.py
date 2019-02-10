@@ -2,6 +2,7 @@
 
 from six.moves import queue
 from six.moves.urllib.parse import urljoin
+import datetime
 import json
 import threading
 import requests
@@ -11,6 +12,7 @@ import time
 import collections
 import concurrent.futures
 from libhoney.version import VERSION
+from libhoney.internal import json_default_handler
 
 try:
     from tornado import ioloop, gen
@@ -156,7 +158,7 @@ class Transmission():
             resp = self.session.post(
                 url,
                 headers={"X-Honeycomb-Team": destination.writekey, "Content-Type": "application/json"},
-                data=json.dumps(payload),
+                data=json.dumps(payload, default=json_default_handler),
                 timeout=10.0,
             )
             status_code = resp.status_code
@@ -339,7 +341,7 @@ if has_tornado:
                         "X-Honeycomb-Team": destination.writekey,
                         "Content-Type": "application/json",
                     },
-                    body=json.dumps(payload),
+                    body=json.dumps(payload, default=json_default_handler),
                 )
                 self.http_client.fetch(req, self._response_callback)
                 # store the events that were sent so we can process responses later
@@ -443,7 +445,7 @@ class FileTransmission():
             "user_agent": self._user_agent,
             "data": ev.fields(),
         }
-        self._output.write(json.dumps(payload) + "\n")
+        self._output.write(json.dumps(payload, default=json_default_handler) + "\n")
 
     def close(self):
         '''Exists to be consistent with the Transmission API, but does nothing
