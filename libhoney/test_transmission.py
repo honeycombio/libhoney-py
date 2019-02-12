@@ -84,7 +84,6 @@ class TestTransmissionSend(unittest.TestCase):
             "error": "event dropped; queue overflow",
         })
 
-
 class TestTransmissionQueueOverflow(unittest.TestCase):
     def test_send(self):
         t = transmission.Transmission()
@@ -224,6 +223,35 @@ class TestFileTransmissionSend(unittest.TestCase):
 
         expected_payload = {
             "data": {'abc': 1, 'xyz': 2},
+            "samplerate": 2.0,
+            "dataset": "exciting-dataset!",
+            "time": expected_event_time,
+            "user_agent": ev.user_agent,
+        }
+        t.send(ev)
+        # hard to compare json because dict ordering is not determanistic,
+        # so convert back to dict
+        args, _  = t._output.write.call_args
+        actual_payload = json.loads(args[0])
+        self.assertDictEqual(actual_payload, expected_payload)
+
+    def test_send_datetime_value(self):
+        t = transmission.FileTransmission(user_agent_addition='test')
+        t._output = mock.Mock()
+        ev = mock.Mock()
+        dt = datetime.datetime.now()
+        ev.fields.return_value = {'abc': 1, 'xyz': 2, 'dt': dt}
+        ev.sample_rate = 2.0
+        ev.dataset = "exciting-dataset!"
+        ev.user_agent = "libhoney-py/" + VERSION + " test"
+        ev.created_at = datetime.datetime.now()
+
+        expected_event_time = ev.created_at.isoformat()
+        if ev.created_at.tzinfo is None:
+            expected_event_time += "Z"
+
+        expected_payload = {
+            "data": {'abc': 1, 'xyz': 2, 'dt': str(dt)},
             "samplerate": 2.0,
             "dataset": "exciting-dataset!",
             "time": expected_event_time,

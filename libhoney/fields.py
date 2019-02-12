@@ -1,5 +1,6 @@
 import inspect
 import json
+from libhoney.internal import json_default_handler
 
 class FieldHolder:
     '''A FieldHolder is the generalized class that stores fields and dynamic
@@ -46,4 +47,4 @@ class FieldHolder:
 
     def __str__(self):
         '''returns a JSON blob of the fields in this holder'''
-        return json.dumps(self._data)
+        return json.dumps(self._data, default=json_default_handler)
