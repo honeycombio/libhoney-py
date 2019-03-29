@@ -32,15 +32,15 @@ def init(writekey="", dataset="", sample_rate=1,
          max_batch_size=100, send_frequency=0.25,
          block_on_send=False, block_on_response=False, transmission_impl=None,
          debug=False):
-    '''Initialize libhoney and prepare it to send events to Honeycomb.
+    '''Initialize libhoney and prepare it to send events to Honeycomb. This creates
+    a global Client object that is configured with the supplied parameters. For some
+    advanced used cases, you might consider creating a Client object directly, but
+    `init` is the quickest path to getting data into Honeycomb.
 
     Note that libhoney initialization initializes a number of threads to handle
     sending payloads to Honeycomb. Be mindful of where you're calling
     `libhoney.init()` in order to ensure correct enqueueing + processing of
     events on the spawned threads.
-
-    Note that this method of initialization will be deprecated in a future
-    libhoney version. For new use cases, use `libhoney.Client`.
 
     Args:
 
@@ -92,7 +92,8 @@ def init(writekey="", dataset="", sample_rate=1,
 
 def responses():
     '''Returns a queue from which you can read a record of response info from
-    each event sent. Responses will be dicts with the following keys:
+    each event sent by the global client. Responses will be dicts with the
+    following keys:
 
     - `status_code` - the HTTP response from the api (eg. 200 or 503)
     - `duration` - how long it took to POST this event to the api, in ms
@@ -112,7 +113,7 @@ def responses():
 
 
 def add_field(name, val):
-    '''add a global field. This field will be sent with every event.'''
+    '''Add a field to the global client. This field will be sent with every event.'''
     if state.G_CLIENT is None:
         state.warn_uninitialized()
         return
@@ -120,7 +121,7 @@ def add_field(name, val):
 
 
 def add_dynamic_field(fn):
-    '''add a global dynamic field. This function will be executed every time an
+    '''Add a dynamic field to the global client. This function will be executed every time an
        event is created. The key/value pair of the function's name and its
        return value will be sent with every event.'''
     if state.G_CLIENT is None:
@@ -130,15 +131,15 @@ def add_dynamic_field(fn):
 
 
 def add(data):
-    '''add takes a mappable object and adds each key/value pair to the global
-       scope'''
+    '''Add takes a mappable object and adds each key/value pair to the global client.
+    These key/value pairs will be sent with every event created by the global client.'''
     if state.G_CLIENT is None:
         state.warn_uninitialized()
         return
     state.G_CLIENT.add(data)
 
 def new_event(data={}):
-    ''' Creates a new event with the default client. If libhoney has not been
+    ''' Creates a new event with the global client. If libhoney has not been
     initialized, sending this event will be a no-op.
     '''
     return Event(data=data, client=state.G_CLIENT)
@@ -152,7 +153,7 @@ def send_now(data):
 
     Shorthand for:
 
-        ev = Event()
+        ev = libhoney.Event()
         ev.add(data)
         ev.send()
     '''
@@ -164,9 +165,9 @@ def send_now(data):
     ev.send()
 
 def flush():
-    '''Closes and restarts the transmission, sending all events. Use this
-    if you want to perform a blocking send of all events in your
-    application.
+    '''Closes and restarts the transmission, sending all enqueued events 
+    created by the global client. Use this if you want to perform a blocking 
+    send of all events in your application.
 
     Note: does not work with asynchronous Transmission implementations such
     as TornadoTransmission.
