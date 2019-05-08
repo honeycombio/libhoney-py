@@ -4,8 +4,10 @@ commands:
   runtests:
     steps:
       - checkout
-      - run: pip install pyflakes==1.5.0
-      - run: pyflakes libhoney && python setup.py test
+      - run:
+          command: |
+            sudo pip install pyflakes==1.5.0
+            pyflakes libhoney && python setup.py test
 
 executors:
   python2-7:
