@@ -1,6 +1,4 @@
-# libhoney
-
-[![CircleCI](https://circleci.com/gh/honeycombio/libhoney-py.svg?style=shield)](https://circleci.com/gh/honeycombio/libhoney-py)
+# libhoney [![CircleCI](https://circleci.com/gh/honeycombio/libhoney-py.svg?style=shield)](https://circleci.com/gh/honeycombio/libhoney-py)
 
 Python library for sending events to [Honeycomb](https://honeycomb.io). (For more information, see the [Honeycomb documentation](https://honeycomb.io/docs) and [Python SDK guide](https://honeycomb.io/docs/connect/python).)
 
