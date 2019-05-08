@@ -1,4 +1,6 @@
-# libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-py.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-py) [![PyPi version](https://badge.fury.io/py/libhoney.svg)](https://badge.fury.io/py/libhoney)
+# libhoney
+
+[![CircleCI](https://circleci.com/gh/honeycombio/libhoney-py.svg?style=shield)](https://circleci.com/gh/honeycombio/libhoney-py)
 
 Python library for sending events to [Honeycomb](https://honeycomb.io). (For more information, see the [Honeycomb documentation](https://honeycomb.io/docs) and [Python SDK guide](https://honeycomb.io/docs/connect/python).)
 
@@ -41,11 +43,14 @@ CONTRIBUTORS file!
 All contributions will be released under the Apache License 2.0.
 
 ## Releases
+
 You may need to install the `bumpversion` utility by running `pip install bumpversion`.
 
 To release a new version, run
+
 ```
 bumpversion [major|minor|patch]
 git push --tags
 ```
+
 After a successful build, a new version will automatically be uploaded to PyPI.
