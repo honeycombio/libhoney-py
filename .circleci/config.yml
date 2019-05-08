@@ -8,27 +8,27 @@ commands:
       - run: pyflakes libhoney && python setup.py test
 
 executors:
-  python2.7:
+  python2-7:
     docker:
       - image: circleci/python:2.7
-  python3.5:
+  python3-5:
     docker:
       - image: circleci/python:3.5
-  python3.6:
+  python3-6:
     docker:
       - image: circleci/python:3.6
 
 jobs:
-  test_python2.7:
-    executor: python2.7
+  test_python2-7:
+    executor: python2-7
     steps:
       - runtests
-  test_python3.5:
-    executor: python3.5
+  test_python3-5:
+    executor: python3-5
     steps:
       - runtests
-  test_python3.6:
-    executor: python3.6
+  test_python3-6:
+    executor: python3-6
     steps:
       - runtests
 
@@ -36,6 +36,6 @@ workflows:
   version: 2
   build_libhoney:
     jobs:
-      - test_python2.7
-      - test_python3.5
-      - test_python3.6
+      - test_python2-7
+      - test_python3-5
+      - test_python3-6
