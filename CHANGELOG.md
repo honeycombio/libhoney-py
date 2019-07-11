@@ -1,5 +1,11 @@
 # libhoney Changelog
 
+## 1.7.2 2019-7-11
+
+Fixes
+
+- Switches default `send_frequency` type in the Tornado transmission implementation from float to timedelta, the correct type to use when fetching from tornado queues. Use of the float resulted in higher than expected CPU utilization. See [#49](https://github.com/honeycombio/libhoney-py/pull/49) for more details.
+
 ## 1.7.1 2019-03-29
 
 Documentation updates only.
