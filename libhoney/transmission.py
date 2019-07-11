@@ -1,4 +1,5 @@
 '''Transmission handles colleting and sending individual events to Honeycomb'''
+from datetime import timedelta
 
 from six.moves import queue
 from six.moves.urllib.parse import urljoin
@@ -220,7 +221,7 @@ if has_tornado:
 
     class TornadoTransmission():
         def __init__(self, max_concurrent_batches=10, block_on_send=False,
-                    block_on_response=False, max_batch_size=100, send_frequency=0.25,
+                    block_on_response=False, max_batch_size=100, send_frequency=timedelta(seconds=0.25),
                     user_agent_addition=''):
             if not has_tornado:
                 raise ImportError('TornadoTransmission requires tornado, but it was not found.')
@@ -296,7 +297,7 @@ if has_tornado:
                         return
                     events.append(ev)
                     if (len(events) > self.max_batch_size or
-                        time.time() - last_flush > self.send_frequency):
+                        time.time() - last_flush > self.send_frequency.total_seconds()):
                         yield self._flush(events)
                         events = []
                 except TimeoutError:
