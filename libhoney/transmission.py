@@ -3,6 +3,8 @@ from datetime import timedelta
 
 from six.moves import queue
 from six.moves.urllib.parse import urljoin
+import gzip
+import io
 import json
 import threading
 import requests
@@ -11,6 +13,7 @@ import sys
 import time
 import collections
 import concurrent.futures
+
 from libhoney.version import VERSION
 from libhoney.internal import json_default_handler
 
@@ -30,12 +33,14 @@ destination = collections.namedtuple("destination",
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
                  block_on_response=False, max_batch_size=100, send_frequency=0.25,
-                 user_agent_addition='', debug=False):
+                 user_agent_addition='', debug=False, gzip_enabled=True, gzip_compression_level=1):
         self.max_concurrent_batches = max_concurrent_batches
         self.block_on_send = block_on_send
         self.block_on_response = block_on_response
         self.max_batch_size = max_batch_size
         self.send_frequency = send_frequency
+        self.gzip_compression_level = gzip_compression_level
+        self.gzip_enabled = gzip_enabled
 
         user_agent = "libhoney-py/" + VERSION
         if user_agent_addition:
@@ -43,6 +48,8 @@ class Transmission():
 
         session = requests.Session()
         session.headers.update({"User-Agent": user_agent})
+        if self.gzip_enabled:
+            session.headers.update({"Content-Encoding": "gzip"})
         self.session = session
 
         # libhoney adds events to the pending queue for us to send
@@ -154,11 +161,22 @@ class Transmission():
                     "samplerate": ev.sample_rate,
                     "data": ev.fields()})
 
+            data = json.dumps(payload, default=json_default_handler)
+            if self.gzip_enabled:
+                # The gzip lib works with file-like objects so we use a buffered byte stream
+                stream = io.BytesIO()
+                compressor = gzip.GzipFile(fileobj=stream, mode='wb', compresslevel=self.gzip_compression_level)
+                # python 2.7 works fine with str data here, but in python 3.x the byte stream object is more strict
+                # so we `encode` the string to get a bytes object
+                compressor.write(data.encode())
+                compressor.close()
+                data = stream.getvalue()
+                stream.close()
             self.log("firing batch, size = %d", len(payload))
             resp = self.session.post(
                 url,
                 headers={"X-Honeycomb-Team": destination.writekey, "Content-Type": "application/json"},
-                data=json.dumps(payload, default=json_default_handler),
+                data=data,
                 timeout=10.0,
             )
             status_code = resp.status_code

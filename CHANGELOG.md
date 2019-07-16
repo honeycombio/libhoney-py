@@ -1,5 +1,11 @@
 # libhoney Changelog
 
+## 1.8.0 2019-7-16 - Update recommended
+
+Improvements
+
+- Default Transmission implementation now compresses payloads by default (using gzip compression level 1). Compression offers significant savings in network egress at the cost of some CPU. Can be disabled by overriding `transmission_impl` when calling `libhoney.init()` and specifying `gzip_enabled=False`. See our official [docs](https://docs.honeycomb.io/getting-data-in/python/sdk/#customizing-event-transmission) for more information about overriding the default transmission.
+
 ## 1.7.2 2019-7-11
 
 Fixes

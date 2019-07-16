@@ -4,12 +4,14 @@ import libhoney
 import libhoney.transmission as transmission
 from libhoney.version import VERSION
 
-import mock
-import unittest
-import requests_mock
 import datetime
+import gzip
+import io
 import json
+import mock
+import requests_mock
 import time
+import unittest
 from six.moves import queue
 
 
@@ -33,7 +35,7 @@ class TestTransmissionInit(unittest.TestCase):
     def test_user_agent_addition(self):
         ''' ensure user_agent_addition is included in the User-Agent header '''
         with mock.patch('transmission.requests.Session') as m_session:
-            transmission.Transmission(user_agent_addition='foo/1.0')
+            transmission.Transmission(user_agent_addition='foo/1.0', gzip_enabled=False)
             expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0"
             m_session.return_value.headers.update.assert_called_once_with({
                 'User-Agent': expected
@@ -84,6 +86,47 @@ class TestTransmissionSend(unittest.TestCase):
             "error": "event dropped; queue overflow",
         })
 
+    def test_send_gzip(self):
+        libhoney.init()
+        with requests_mock.Mocker() as m:
+            m.post("http://urlme/1/batch/datame",
+                   text=json.dumps([{"status": 202}]), status_code=200,
+                   request_headers={"X-Honeycomb-Team": "writeme"})
+
+            t = transmission.Transmission(block_on_send=True)
+            t.start()
+            ev = libhoney.Event()
+            ev.writekey = "writeme"
+            ev.dataset = "datame"
+            ev.api_host = "http://urlme/"
+            ev.metadata = "metadaaata"
+            ev.sample_rate = 3
+            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+            ev.add_field("key", "asdf")
+            t.send(ev)
+
+            # sending is async even with the mock so block until it happens
+            resp_received = False
+            while not resp_received:
+                resp = t.responses.get()
+                if resp is None:
+                    break
+
+                self.assertEqual(resp["status_code"], 202)
+                self.assertEqual(resp["metadata"], "metadaaata")
+                resp_received = True
+
+            for req in m.request_history:
+                # verify gzip payload is sane by decompressing and checking contents
+                self.assertEqual(req.headers['Content-Encoding'], 'gzip', "content encoding should be gzip")
+                gz = gzip.GzipFile(fileobj=io.BytesIO(req.body), mode='rb')
+                # json.load in python 3.5 doesn't like binary files, so we can't pass
+                # the gzip stream directly to it
+                uncompressed = gz.read().decode()
+                data = json.loads(uncompressed)
+                self.assertEqual(data[0]['samplerate'], 3)
+                self.assertEqual(data[0]['data']['key'], 'asdf')
+
 class TestTransmissionQueueOverflow(unittest.TestCase):
     def test_send(self):
         t = transmission.Transmission()
@@ -108,7 +151,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                    text=json.dumps(200 * [{"status": 202}]), status_code=200,
                    request_headers={"X-Honeycomb-Team": "writeme"})
 
-            t = transmission.Transmission()
+            t = transmission.Transmission(gzip_enabled=False)
             t.start()
             for i in range(300):
                 ev = libhoney.Event()
@@ -138,7 +181,6 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                     assert event["time"] == "2013-01-01T11:11:11Z"
                     assert event["samplerate"] == 3
 
-
     def test_grouping(self):
         libhoney.init()
         with requests_mock.Mocker() as m:
@@ -150,7 +192,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                    text=json.dumps(100 * [{"status": 202}]), status_code=200,
                    request_headers={"X-Honeycomb-Team": "writeme"})
 
-            t = transmission.Transmission(max_concurrent_batches=1)
+            t = transmission.Transmission(max_concurrent_batches=1, gzip_enabled=False)
             t.start()
 
             builder = libhoney.Builder()
@@ -190,7 +232,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                    text=json.dumps(100 * [{"status": 202}]), status_code=200,
                    request_headers={"X-Honeycomb-Team": "writeme"})
 
-            t = transmission.Transmission(max_concurrent_batches=1, send_frequency=0.1)
+            t = transmission.Transmission(max_concurrent_batches=1, send_frequency=0.1, gzip_enabled=False)
             t.start()
 
             ev = libhoney.Event()
