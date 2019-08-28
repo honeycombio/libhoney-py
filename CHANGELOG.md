@@ -1,4 +1,9 @@
 # libhoney Changelog
+## 1.9.0 2019-08-28
+
+Features
+
+- The default Transmission implementation now supports a `proxies` argument, which accepts a map defining http/https proxies. See the [requests](https://2.python-requests.org/en/master/user/advanced/#proxies) docs on proxies for more information.
 
 ## 1.8.0 2019-7-16 - Update recommended
 
