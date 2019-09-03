@@ -33,7 +33,8 @@ destination = collections.namedtuple("destination",
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
                  block_on_response=False, max_batch_size=100, send_frequency=0.25,
-                 user_agent_addition='', debug=False, gzip_enabled=True, gzip_compression_level=1):
+                 user_agent_addition='', debug=False, gzip_enabled=True, gzip_compression_level=1,
+                 proxies={}):
         self.max_concurrent_batches = max_concurrent_batches
         self.block_on_send = block_on_send
         self.block_on_response = block_on_response
@@ -50,6 +51,8 @@ class Transmission():
         session.headers.update({"User-Agent": user_agent})
         if self.gzip_enabled:
             session.headers.update({"Content-Encoding": "gzip"})
+        if proxies:
+            session.proxies.update(proxies)
         self.session = session
 
         # libhoney adds events to the pending queue for us to send
