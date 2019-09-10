@@ -56,3 +56,58 @@ Improvements
 Deprecations
 
 - `send_now` is deprecated, you should use `new_event` to create a new event combined with `Event.send()` to enqueue the event. `send_now` does not block the application to send events immediately, but its name had generated significant confusion.
+
+## 1.5.0 2018-08-29
+
+Features
+
+- Adds new, optional `FileTransmission` transmission type for outputing to a file. Defaults to stdout. [#38](https://github.com/honeycombio/libhoney-py/pull/38)
+
+## 1.4.0 2018-07-12
+
+Features
+
+- Adds new `flush` method to instantly send all pending events to Honeycomb. [#37](https://github.com/honeycombio/libhoney-py/pull/37)
+
+## 1.3.3 2018-06-26
+
+Fixes
+
+- Fixes a positional/keyword argument mixup in the `Client` class. [#36](https://github.com/honeycombio/libhoney-py/pull/37)
+
+## 1.3.2 2018-06-22
+
+Fixes
+
+- `Client` class now supports `user_agent_addition` argument. [#35](https://github.com/honeycombio/libhoney-py/pull/35)
+
+## 1.3.0 2018-06-19
+
+Features
+
+- Adds `Client` class. Previously, the libhoney library operated arounda single global state. This state is now packaged in the `Client` class, enabling multiple simultaneous configurations. The global state is now backed by a default `Client` instance.
+
+## 1.2.3 2018-06-01
+
+Features
+
+- Adds a `Transmission` implementation for Tornado.
+
+## 1.2.2 2018-04-23
+
+Fixes
+
+- Support older versions of requests package.
+
+## 1.2.1 2018-03-27 Update Recommended
+
+Fixes
+
+- Batch payloads were not passing timestamp information to the API correctly.
+
+
+## 1.2.0 2018-03-08
+
+Improvements
+
+- Libhoney now transmits multiple events using the batch API. Previously, each event was sent as a separate request to the events API.
