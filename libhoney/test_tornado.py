@@ -7,11 +7,11 @@ import mock
 import six
 import tornado
 import libhoney
-import transmission
+import libhoney.transmission as transmission
 
-PATCH_NAMESPACE='transmission'
-if six.PY2:
-    PATCH_NAMESPACE='libhoney.transmission'
+PATCH_NAMESPACE='libhoney.transmission'
+# if six.PY2:
+#     PATCH_NAMESPACE='libhoney.transmission'
 
 
 class TestTornadoTransmissionInit(unittest.TestCase):
@@ -22,6 +22,7 @@ class TestTornadoTransmissionInit(unittest.TestCase):
         self.assertIsInstance(t.responses, tornado.queues.Queue)
         self.assertEqual(t.block_on_send, False)
         self.assertEqual(t.block_on_response, False)
+        self.assertEqual(transmission.has_tornado, True)
 
     def test_args(self):
         t = transmission.TornadoTransmission(max_concurrent_batches=4, block_on_send=True, block_on_response=True)
