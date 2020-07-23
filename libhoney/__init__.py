@@ -61,7 +61,8 @@ def init(writekey="", dataset="", sample_rate=1,
 
     **Configuration recommendations**:
 
-    **For gunicorn**, use a [`post_worker_init` config hook](http://docs.gunicorn.org/en/stable/settings.html#post-worker-init) to initialize Honeycomb:
+    **For gunicorn**, use a [`post_worker_init` config hook](http://docs.gunicorn.org/en/stable/settings.html#post-worker-init)
+    to initialize Honeycomb:
 
         # conf.py
         import logging
@@ -168,8 +169,8 @@ def send_now(data):
 
 
 def flush():
-    '''Closes and restarts the transmission, sending all enqueued events 
-    created by the global client. Use this if you want to perform a blocking 
+    '''Closes and restarts the transmission, sending all enqueued events
+    created by the global client. Use this if you want to perform a blocking
     send of all events in your application.
 
     Note: does not work with asynchronous Transmission implementations such
