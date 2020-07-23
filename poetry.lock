@@ -426,7 +426,7 @@ python-versions = "*"
 version = "1.12.1"
 
 [metadata]
-content-hash = "6f4f8414d6b898d98f565f806cdd39583d9e598f3b5cc028b287087dcbc671ff"
+content-hash = "01ac5ef5ff2223261666fc3430a3ef01b83b3c987bcbf10128c96984182ca663"
 lock-version = "1.0"
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
