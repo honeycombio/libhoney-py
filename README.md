@@ -1,4 +1,6 @@
-# libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-py.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-py) [![PyPi version](https://badge.fury.io/py/libhoney.svg)](https://badge.fury.io/py/libhoney)
+# libhoney-py
+
+[![Build Status](https://circleci.com/gh/honeycombio/libhoney-py.svg?style=svg)](https://app.circleci.com/pipelines/github/honeycombio/libhoney-py)
 
 Python library for sending events to [Honeycomb](https://honeycomb.io), a service for debugging your software in production.
 
