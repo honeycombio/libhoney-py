@@ -4,19 +4,7 @@ orbs:
   buildevents: honeycombio/buildevents@0.2.6
 
 executors:
-  python2-7:
-    docker:
-      - image: circleci/python:2.7
-  python3-5:
-    docker:
-      - image: circleci/python:3.5
-  python3-6:
-    docker:
-      - image: circleci/python:3.6
-  python3-7:
-    docker:
-      - image: circleci/python:3.7
-  python3-8:
+  python:
     docker:
       - image: circleci/python:3.8
   github:
@@ -47,10 +35,10 @@ commands:
     steps:
       - buildevents/berun:
           bename: coverage_report
-          becommand: poetry run coverage report --include="beeline/*"
+          becommand: poetry run coverage report --include="libhoney/*"
       - buildevents/berun:
           bename: coverage_html
-          becommand: poetry run coverage html --include="beeline/*"
+          becommand: poetry run coverage html --include="libhoney/*"
 
   runtests:
     steps:
@@ -105,45 +93,25 @@ tag_filters: &tag_filters
 
 jobs:
   setup_trace:
-    executor: python3-8
+    executor: python
     steps:
       - buildevents/start_trace
   watch:
-    executor: python3-8
+    executor: python
     steps:
       - buildevents/watch_build_and_finish
-  test_python2-7:
-    executor: python2-7
-    steps:
-      - buildevents/with_job_span:
-          steps:
-            - runtests
-  test_python3-5:
-    executor: python3-5
-    steps:
-      - buildevents/with_job_span:
-          steps:
-            - runtests
-  test_python3-6:
-    executor: python3-6
-    steps:
-      - buildevents/with_job_span:
-          steps:
-            - runtests
-  test_python3-7:
-    executor: python3-7
-    steps:
-      - buildevents/with_job_span:
-          steps:
-            - runtests
-  test_python3-8:
-    executor: python3-8
+  test:
+    parameters:
+      python-version:
+        type: string
+    docker:
+      - image: circleci/python:<<parameters.python-version>>
     steps:
       - buildevents/with_job_span:
           steps:
             - runtests
   build:
-    executor: python3-8
+    executor: python
     steps:
       - buildevents/with_job_span:
           steps:
@@ -155,7 +123,7 @@ jobs:
           steps:
             - publish_github
   publish_pypi:
-    executor: python3-8
+    executor: python
     steps:
       - buildevents/with_job_span:
           steps:
@@ -175,31 +143,10 @@ workflows:
               only: /.*/
           requires:
             - setup_trace
-      - test_python2-7:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - setup_trace
-      - test_python3-5:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - setup_trace
-      - test_python3-6:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - setup_trace
-      - test_python3-7:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - setup_trace
-      - test_python3-8:
+      - test:
+          matrix:
+            parameters:
+              python-version: ["2.7", "3.5", "3.6", "3.7", "3.8"]
           filters:
             tags:
               only: /.*/
@@ -210,11 +157,7 @@ workflows:
             tags:
               only: /.*/
           requires:
-            - test_python2-7
-            - test_python3-5
-            - test_python3-6
-            - test_python3-7
-            - test_python3-8
+            - test
       - publish_github:
           context: Honeycomb Secrets
           requires:
