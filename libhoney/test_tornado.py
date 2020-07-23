@@ -9,7 +9,7 @@ import tornado
 import libhoney
 import libhoney.transmission as transmission
 
-PATCH_NAMESPACE='libhoney.transmission'
+PATCH_NAMESPACE = 'libhoney.transmission'
 # if six.PY2:
 #     PATCH_NAMESPACE='libhoney.transmission'
 
@@ -25,7 +25,8 @@ class TestTornadoTransmissionInit(unittest.TestCase):
         self.assertEqual(transmission.has_tornado, True)
 
     def test_args(self):
-        t = transmission.TornadoTransmission(max_concurrent_batches=4, block_on_send=True, block_on_response=True)
+        t = transmission.TornadoTransmission(
+            max_concurrent_batches=4, block_on_send=True, block_on_response=True)
         t.start()
         self.assertEqual(t.block_on_send, True)
         self.assertEqual(t.block_on_response, True)
@@ -48,6 +49,7 @@ class TestTornadoTransmissionSend(unittest.TestCase):
                 mock.patch('statsd.StatsClient') as m_statsd:
             m_http.return_value = mock.Mock()
             m_statsd.return_value = mock.Mock()
+
             @tornado.gen.coroutine
             def _test():
                 t = transmission.TornadoTransmission()
@@ -72,8 +74,8 @@ class TestTornadoTransmissionSend(unittest.TestCase):
 
 
 class TestTornadoTransmissionQueueOverflow(unittest.TestCase):
-     def test_send(self):
-         with mock.patch('statsd.StatsClient') as m_statsd:
+    def test_send(self):
+        with mock.patch('statsd.StatsClient') as m_statsd:
             m_statsd.return_value = mock.Mock()
 
             t = transmission.TornadoTransmission()
@@ -84,6 +86,7 @@ class TestTornadoTransmissionQueueOverflow(unittest.TestCase):
 
             t.send(mock.Mock())
             t.send(mock.Mock())
-            t.send(mock.Mock()) # should overflow sending and land on response
+            t.send(mock.Mock())  # should overflow sending and land on response
             m_statsd.return_value.incr.assert_any_call("queue_overflow")
-            t.send(mock.Mock()) # shouldn't throw exception when response is full
+            # shouldn't throw exception when response is full
+            t.send(mock.Mock())

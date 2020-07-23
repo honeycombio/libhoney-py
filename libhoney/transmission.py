@@ -30,6 +30,7 @@ except ImportError:
 destination = collections.namedtuple("destination",
                                      ["writekey", "dataset", "api_host"])
 
+
 class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
                  block_on_response=False, max_batch_size=100, send_frequency=0.25,
@@ -68,12 +69,13 @@ class Transmission():
             self._init_logger()
 
     def _init_logger(self):
-        import logging
+        import logging  # pylint: disable=bad-option-value,import-outside-toplevel
         self._logger = logging.getLogger('honeycomb-sdk-xmit')
         self._logger.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         ch.setFormatter(formatter)
         self._logger.addHandler(ch)
 
@@ -168,7 +170,8 @@ class Transmission():
             if self.gzip_enabled:
                 # The gzip lib works with file-like objects so we use a buffered byte stream
                 stream = io.BytesIO()
-                compressor = gzip.GzipFile(fileobj=stream, mode='wb', compresslevel=self.gzip_compression_level)
+                compressor = gzip.GzipFile(
+                    fileobj=stream, mode='wb', compresslevel=self.gzip_compression_level)
                 # python 2.7 works fine with str data here, but in python 3.x the byte stream object is more strict
                 # so we `encode` the string to get a bytes object
                 compressor.write(data.encode())
@@ -178,15 +181,18 @@ class Transmission():
             self.log("firing batch, size = %d", len(payload))
             resp = self.session.post(
                 url,
-                headers={"X-Honeycomb-Team": destination.writekey, "Content-Type": "application/json"},
+                headers={"X-Honeycomb-Team": destination.writekey,
+                         "Content-Type": "application/json"},
                 data=data,
                 timeout=10.0,
             )
             status_code = resp.status_code
             resp.raise_for_status()
-            statuses = [{"status": d.get("status"), "error": d.get("error")} for d in resp.json()]
+            statuses = [{"status": d.get("status"), "error": d.get(
+                "error")} for d in resp.json()]
             for ev, status in zip(events, statuses):
-                self._enqueue_response(status.get("status"), "", status.get("error"), start, ev.metadata)
+                self._enqueue_response(status.get(
+                    "status"), "", status.get("error"), start, ev.metadata)
 
         except Exception as e:
             # Catch all exceptions and hand them to the responses queue.
@@ -234,6 +240,7 @@ class Transmission():
         objects from each event send'''
         return self.responses
 
+
 # only define this class if tornado exists, otherwise we'll get NameError on gen
 # Is there a better way to do this?
 if has_tornado:
@@ -242,10 +249,11 @@ if has_tornado:
 
     class TornadoTransmission():
         def __init__(self, max_concurrent_batches=10, block_on_send=False,
-                    block_on_response=False, max_batch_size=100, send_frequency=timedelta(seconds=0.25),
-                    user_agent_addition=''):
+                     block_on_response=False, max_batch_size=100, send_frequency=timedelta(seconds=0.25),
+                     user_agent_addition=''):
             if not has_tornado:
-                raise ImportError('TornadoTransmission requires tornado, but it was not found.')
+                raise ImportError(
+                    'TornadoTransmission requires tornado, but it was not found.')
 
             self.block_on_send = block_on_send
             self.block_on_response = block_on_response
@@ -318,7 +326,7 @@ if has_tornado:
                         return
                     events.append(ev)
                     if (len(events) > self.max_batch_size or
-                        time.time() - last_flush > self.send_frequency.total_seconds()):
+                            time.time() - last_flush > self.send_frequency.total_seconds()):
                         yield self._flush(events)
                         events = []
                 except TimeoutError:
@@ -345,7 +353,7 @@ if has_tornado:
                 # enforce max_concurrent_batches
                 yield self.batch_sem.acquire()
                 url = urljoin(urljoin(destination.api_host, "/1/batch/"),
-                            destination.dataset)
+                              destination.dataset)
                 payload = []
                 for ev in events:
                     event_time = ev.created_at.isoformat()
@@ -377,20 +385,22 @@ if has_tornado:
         def _enqueue_errors(self, status_code, error, start, events):
             for ev in events:
                 self.sd.incr("send_errors")
-                self._enqueue_response(status_code, "", error, start, ev.metadata)
+                self._enqueue_response(
+                    status_code, "", error, start, ev.metadata)
 
         def _response_callback(self, resp):
             # resp.request should be the same HTTPRequest object built by _send_batch
             # and mapped to values in batch_data
             events = self.batch_data[resp.request]["events"]
-            start  = self.batch_data[resp.request]["start"]
+            start = self.batch_data[resp.request]["start"]
             try:
                 status_code = resp.code
                 resp.rethrow()
 
                 statuses = [d["status"] for d in json.loads(resp.body)]
                 for ev, status in zip(events, statuses):
-                    self._enqueue_response(status, "", None, start, ev.metadata)
+                    self._enqueue_response(
+                        status, "", None, start, ev.metadata)
                     self.sd.incr("messages_sent")
             except Exception as e:
                 self._enqueue_errors(status_code, e, start, events)
@@ -434,9 +444,11 @@ if has_tornado:
             objects from each event send'''
             return self.responses
 
+
 class FileTransmission():
     ''' Transmission implementation that writes to a file object
     rather than sending events to Honeycomb. Defaults to STDERR. '''
+
     def __init__(self, user_agent_addition='', output=sys.stderr):
         self._output = output
 
@@ -466,7 +478,8 @@ class FileTransmission():
             "user_agent": self._user_agent,
             "data": ev.fields(),
         }
-        self._output.write(json.dumps(payload, default=json_default_handler) + "\n")
+        self._output.write(json.dumps(
+            payload, default=json_default_handler) + "\n")
 
     def close(self):
         '''Exists to be consistent with the Transmission API, but does nothing
@@ -483,6 +496,7 @@ class FileTransmission():
         inspect the response queue when using this type.'''
         pass
 
+
 def group_events_by_destination(events):
     ''' Events all get added to a single queue when you call send(), but you
     might be sending different events to different datasets. This function
@@ -492,6 +506,7 @@ def group_events_by_destination(events):
     for ev in events:
         ret[destination(ev.writekey, ev.dataset, ev.api_host)].append(ev)
     return ret
+
 
 def _safe_submit(pool, *args, **kwargs):
     # because we're running as a daemon thread, it's possible

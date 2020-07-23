@@ -2,6 +2,7 @@ import inspect
 import json
 from libhoney.internal import json_default_handler
 
+
 class FieldHolder:
     '''A FieldHolder is the generalized class that stores fields and dynamic
        fields. It should not be used directly; only through the subclasses'''

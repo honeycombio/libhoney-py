@@ -25,7 +25,8 @@ class TestTransmissionInit(unittest.TestCase):
         self.assertEqual(t.block_on_response, False)
 
     def test_args(self):
-        t = transmission.Transmission(max_concurrent_batches=4, block_on_send=True, block_on_response=True)
+        t = transmission.Transmission(
+            max_concurrent_batches=4, block_on_send=True, block_on_response=True)
         t.start()
         self.assertEqual(t.max_concurrent_batches, 4)
         self.assertEqual(t.block_on_send, True)
@@ -35,11 +36,13 @@ class TestTransmissionInit(unittest.TestCase):
     def test_user_agent_addition(self):
         ''' ensure user_agent_addition is included in the User-Agent header '''
         with mock.patch('libhoney.transmission.requests.Session') as m_session:
-            transmission.Transmission(user_agent_addition='foo/1.0', gzip_enabled=False)
+            transmission.Transmission(
+                user_agent_addition='foo/1.0', gzip_enabled=False)
             expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0"
             m_session.return_value.headers.update.assert_called_once_with({
                 'User-Agent': expected
             })
+
 
 class FakeEvent():
     def __init__(self):
@@ -118,7 +121,8 @@ class TestTransmissionSend(unittest.TestCase):
 
             for req in m.request_history:
                 # verify gzip payload is sane by decompressing and checking contents
-                self.assertEqual(req.headers['Content-Encoding'], 'gzip', "content encoding should be gzip")
+                self.assertEqual(
+                    req.headers['Content-Encoding'], 'gzip', "content encoding should be gzip")
                 gz = gzip.GzipFile(fileobj=io.BytesIO(req.body), mode='rb')
                 # json.load in python 3.5 doesn't like binary files, so we can't pass
                 # the gzip stream directly to it
@@ -126,6 +130,7 @@ class TestTransmissionSend(unittest.TestCase):
                 data = json.loads(uncompressed)
                 self.assertEqual(data[0]['samplerate'], 3)
                 self.assertEqual(data[0]['data']['key'], 'asdf')
+
 
 class TestTransmissionQueueOverflow(unittest.TestCase):
     def test_send(self):
@@ -135,8 +140,8 @@ class TestTransmissionQueueOverflow(unittest.TestCase):
 
         t.send(FakeEvent())
         t.send(FakeEvent())
-        t.send(FakeEvent()) # should overflow sending and land on response
-        t.send(FakeEvent()) # shouldn't throw exception when response is full
+        t.send(FakeEvent())  # should overflow sending and land on response
+        t.send(FakeEvent())  # shouldn't throw exception when response is full
 
 
 class TestTransmissionPrivateSend(unittest.TestCase):
@@ -192,7 +197,8 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                    text=json.dumps(100 * [{"status": 202}]), status_code=200,
                    request_headers={"X-Honeycomb-Team": "writeme"})
 
-            t = transmission.Transmission(max_concurrent_batches=1, gzip_enabled=False)
+            t = transmission.Transmission(
+                max_concurrent_batches=1, gzip_enabled=False)
             t.start()
 
             builder = libhoney.Builder()
@@ -223,7 +229,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
             assert resp_count == 200
 
             assert ({h.url for h in m.request_history} ==
-                {"http://urlme/1/batch/dataset", "http://urlme/1/batch/alt_dataset"})
+                    {"http://urlme/1/batch/dataset", "http://urlme/1/batch/alt_dataset"})
 
     def test_flush_after_timeout(self):
         libhoney.init()
@@ -232,7 +238,8 @@ class TestTransmissionPrivateSend(unittest.TestCase):
                    text=json.dumps(100 * [{"status": 202}]), status_code=200,
                    request_headers={"X-Honeycomb-Team": "writeme"})
 
-            t = transmission.Transmission(max_concurrent_batches=1, send_frequency=0.1, gzip_enabled=False)
+            t = transmission.Transmission(
+                max_concurrent_batches=1, send_frequency=0.1, gzip_enabled=False)
             t.start()
 
             ev = libhoney.Event()
@@ -247,6 +254,7 @@ class TestTransmissionPrivateSend(unittest.TestCase):
             resp = t.responses.get()
             assert resp["status_code"] == 202
             t.close()
+
 
 class TestFileTransmissionSend(unittest.TestCase):
     def test_send(self):
@@ -273,7 +281,7 @@ class TestFileTransmissionSend(unittest.TestCase):
         t.send(ev)
         # hard to compare json because dict ordering is not determanistic,
         # so convert back to dict
-        args, _  = t._output.write.call_args
+        args, _ = t._output.write.call_args
         actual_payload = json.loads(args[0])
         self.assertDictEqual(actual_payload, expected_payload)
 
@@ -302,6 +310,6 @@ class TestFileTransmissionSend(unittest.TestCase):
         t.send(ev)
         # hard to compare json because dict ordering is not determanistic,
         # so convert back to dict
-        args, _  = t._output.write.call_args
+        args, _ = t._output.write.call_args
         actual_payload = json.loads(args[0])
         self.assertDictEqual(actual_payload, expected_payload)

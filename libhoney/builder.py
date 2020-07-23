@@ -2,6 +2,7 @@ import libhoney.state as state
 from libhoney.event import Event
 from libhoney.fields import FieldHolder
 
+
 class Builder(object):
     '''A Builder is a scoped object to which you can add fields and dynamic
        fields. Events created from this builder will inherit all fields
@@ -27,11 +28,10 @@ class Builder(object):
 
         self._fields = FieldHolder()  # get an empty FH
         if self.client:
-            self._fields += self.client.fields # fill it with the client fields
+            self._fields += self.client.fields  # fill it with the client fields
         self._fields.add(data)        # and anything passed in
         [self._fields.add_dynamic_field(fn) for fn in dyn_fields]
         self._fields += fields
-
 
     def add_field(self, name, val):
         self._fields.add_field(name, val)
