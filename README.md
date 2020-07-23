@@ -21,11 +21,11 @@ All contributions will be released under the Apache License 2.0.
 
 You may need to install the `bump2version` utility by running `pip install bump2version`.
 
-To release a new version, run
+To update the version number, do
 
 ```
 bump2version [major|minor|patch|release|build]
-git push --tags
 ```
 
-After a successful build, a new version will automatically be uploaded to PyPI.
+If you want to release the version publicly, you will need to manually create a tag `v<x.y.z>` and push it in order to
+cause CircleCI to automatically push builds to github releases and PyPI.
