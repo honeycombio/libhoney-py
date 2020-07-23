@@ -7,9 +7,9 @@ import mock
 import six
 import tornado
 import libhoney
-import libhoney.transmission as transmission
+import transmission
 
-PATCH_NAMESPACE = 'libhoney.transmission'
+PATCH_NAMESPACE = 'transmission'
 # if six.PY2:
 #     PATCH_NAMESPACE='libhoney.transmission'
 
