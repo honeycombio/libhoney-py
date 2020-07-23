@@ -22,7 +22,7 @@ You may need to install the `bump2version` utility by running `pip install bump2
 To release a new version, run
 
 ```
-bump2version [major|minor|patch|dev]
+bump2version [major|minor|patch|release|build]
 git push --tags
 ```
 
