@@ -16,11 +16,14 @@ CONTRIBUTORS file!
 All contributions will be released under the Apache License 2.0.
 
 ## Releases
-You may need to install the `bumpversion` utility by running `pip install bumpversion`.
+
+You may need to install the `bump2version` utility by running `pip install bump2version`.
 
 To release a new version, run
+
 ```
-bumpversion [major|minor|patch]
+bump2version [major|minor|patch|dev]
 git push --tags
 ```
+
 After a successful build, a new version will automatically be uploaded to PyPI.

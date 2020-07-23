@@ -7,11 +7,7 @@ import mock
 import six
 import tornado
 import libhoney
-import transmission
-
-PATCH_NAMESPACE = 'transmission'
-# if six.PY2:
-#     PATCH_NAMESPACE='libhoney.transmission'
+import libhoney.transmission as transmission
 
 
 class TestTornadoTransmissionInit(unittest.TestCase):
@@ -34,7 +30,7 @@ class TestTornadoTransmissionInit(unittest.TestCase):
 
     def test_user_agent_addition(self):
         ''' ensure user_agent_addition is included in the User-Agent header '''
-        with mock.patch(PATCH_NAMESPACE + '.AsyncHTTPClient') as m_client:
+        with mock.patch('libhoney.transmission.AsyncHTTPClient') as m_client:
             transmission.TornadoTransmission(user_agent_addition='foo/1.0')
             expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0"
             m_client.assert_called_once_with(
@@ -45,7 +41,7 @@ class TestTornadoTransmissionInit(unittest.TestCase):
 
 class TestTornadoTransmissionSend(unittest.TestCase):
     def test_send(self):
-        with mock.patch(PATCH_NAMESPACE+'.AsyncHTTPClient') as m_http,\
+        with mock.patch('libhoney.transmission.AsyncHTTPClient') as m_http,\
                 mock.patch('statsd.StatsClient') as m_statsd:
             m_http.return_value = mock.Mock()
             m_statsd.return_value = mock.Mock()

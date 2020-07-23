@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "libhoney"
-version = "1.9.0"
+version = "1.9.1-dev" # Also update in version.py
 description = "Python library for sending data to Honeycomb"
 authors = ["Honeycomb.io <feedback@honeycomb.io>"]
 license = "Apache-2.0"
@@ -25,6 +25,7 @@ mock = {version = "3.0.5", python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"}
 requests-mock = "^1.8.0"
 tornado = [{version="^5.1.1", python = "<3.0"}, {version = "^6.0.4", python = ">=3.5"}]
 autopep8 = "^1.5.3"
+bump2version = {version="^1.0.0", python = ">=3.5"}
 
 [build-system]
 requires = ["poetry>=0.12"]
