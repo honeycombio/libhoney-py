@@ -1,4 +1,6 @@
-# libhoney [![Build Status](https://travis-ci.org/honeycombio/libhoney-py.svg?branch=master)](https://travis-ci.org/honeycombio/libhoney-py) [![PyPi version](https://badge.fury.io/py/libhoney.svg)](https://badge.fury.io/py/libhoney)
+# libhoney-py
+
+[![Build Status](https://circleci.com/gh/honeycombio/libhoney-py.svg?style=svg)](https://app.circleci.com/pipelines/github/honeycombio/libhoney-py)
 
 Python library for sending events to [Honeycomb](https://honeycomb.io), a service for debugging your software in production.
 
@@ -16,11 +18,14 @@ CONTRIBUTORS file!
 All contributions will be released under the Apache License 2.0.
 
 ## Releases
-You may need to install the `bumpversion` utility by running `pip install bumpversion`.
 
-To release a new version, run
+You may need to install the `bump2version` utility by running `pip install bump2version`.
+
+To update the version number, do
+
 ```
-bumpversion [major|minor|patch]
-git push --tags
+bump2version [major|minor|patch|release|build]
 ```
-After a successful build, a new version will automatically be uploaded to PyPI.
+
+If you want to release the version publicly, you will need to manually create a tag `v<x.y.z>` and push it in order to
+cause CircleCI to automatically push builds to github releases and PyPI.

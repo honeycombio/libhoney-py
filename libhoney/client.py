@@ -5,6 +5,7 @@ from libhoney.builder import Builder
 from libhoney.fields import FieldHolder
 from libhoney.transmission import Transmission
 
+
 class Client(object):
     '''Instantiate a libhoney Client that can prepare and send events to Honeycomb.
 
@@ -53,6 +54,7 @@ class Client(object):
             User-Agent string, separated by a space. The expected format is
             product-name/version, eg "myapp/1.0"
     '''
+
     def __init__(self, writekey="", dataset="", sample_rate=1,
                  api_host="https://api.honeycomb.io",
                  max_concurrent_batches=10, max_batch_size=100,
@@ -84,9 +86,11 @@ class Client(object):
         self.log('initialized honeycomb client: writekey=%s dataset=%s',
                  writekey, dataset)
         if not writekey:
-            self.log('writekey not set! set the writekey if you want to send data to honeycomb')
+            self.log(
+                'writekey not set! set the writekey if you want to send data to honeycomb')
         if not dataset:
-            self.log('dataset not set! set a value for dataset if you want to send data to honeycomb')
+            self.log(
+                'dataset not set! set a value for dataset if you want to send data to honeycomb')
 
     # enable use in a context manager
     def __enter__(self):
@@ -97,12 +101,13 @@ class Client(object):
         self.close()
 
     def _init_logger(self):
-        import logging
+        import logging  # pylint: disable=bad-option-value,import-outside-toplevel
         self._logger = logging.getLogger('honeycomb-sdk')
         self._logger.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         ch.setFormatter(formatter)
         self._logger.addHandler(ch)
 
@@ -204,7 +209,6 @@ class Client(object):
 
         # we should error on post-close sends
         self.xmit = None
-
 
     def flush(self):
         '''Closes and restarts the transmission, sending all events. Use this

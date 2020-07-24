@@ -1,91 +1,178 @@
 version: 2.1
 
+orbs:
+  buildevents: honeycombio/buildevents@0.2.6
+
+executors:
+  python:
+    docker:
+      - image: circleci/python:3.8
+  github:
+    docker:
+      - image: cibuilds/github:0.13.0
+
 commands:
+  setup:
+    steps:
+      - checkout
+      - buildevents/berun:
+          bename: poetry_install
+          becommand: poetry install --no-root
+  run_lint:
+    steps:
+      - buildevents/berun:
+          bename: run_lint
+          becommand: poetry run pylint --rcfile=pylint.rc libhoney
+      - buildevents/berun:
+          bename: run_pycodestyle
+          becommand: poetry run pycodestyle libhoney --max-line-length=140
+  run_tests:
+    steps:
+      - buildevents/berun:
+          bename: run_tests
+          becommand: poetry run coverage run -m unittest discover -v
+  run_coverage:
+    steps:
+      - buildevents/berun:
+          bename: coverage_report
+          becommand: poetry run coverage report --include="libhoney/*"
+      - buildevents/berun:
+          bename: coverage_html
+          becommand: poetry run coverage html --include="libhoney/*"
+
   runtests:
     steps:
-      - checkout
-      - run:
-          command: |
-            sudo pip install pyflakes==1.5.0 pylint setuptools-lint
-            pip install --upgrade setuptools
-            pyflakes libhoney && python setup.py lint --lint-rcfile pylint.rc && python setup.py test
-  publish:
+      - setup
+      - run_lint
+      - run_tests
+      - run_coverage
+      - store_artifacts:
+          path: htmlcov
+  build:
     steps:
-      - checkout
-      - run:
-          name: "publish to pypi"
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install --upgrade setuptools wheel twine
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = honeycomb" >> ~/.pypirc
-            echo -e "password = ${PYPI_PASSWORD}" >> ~/.pypirc
+      - setup
+      - run: mkdir -p ~/artifacts
+      - buildevents/berun:
+          bename: poetry_build
+          becommand: poetry build
+      - buildevents/berun:
+          bename: copy_binaries
+          becommand: cp dist/* ~/artifacts
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - artifacts
+      - store_artifacts:
+          path: ~/artifacts
 
-            # create a source distribution
-            python setup.py sdist
-            # create a wheel
-            python setup.py bdist_wheel
-            twine upload dist/*
-            ./push_docs.sh
-executors:
-  python2-7:
-    docker:
-      - image: circleci/python:2.7
-  python3-5:
-    docker:
-      - image: circleci/python:3.5
-  python3-6:
-    docker:
-      - image: circleci/python:3.6
-  python3-7:
-    docker:
-      - image: circleci/python:3.7
+  publish_github:
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: "Artifacts being published"
+          command: |
+            echo "about to publish to tag ${CIRCLE_TAG}"
+            ls -l ~/artifacts/*
+      - buildevents/berun:
+          bename: ghr_draft
+          becommand: ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ~/artifacts
+
+  publish_pypi:
+    steps:
+      - setup
+      - buildevents/berun:
+          bename: poetry_publish
+          becommand: poetry publish --build -u honeycomb -p ${PYPI_PASSWORD}
 
 # required as all of the jobs need to have a tag filter for some reason
 tag_filters: &tag_filters
   filters:
-      tags:
-        only: /.*/
+    tags:
+      only: /.*/
 
 jobs:
-  test_python2-7:
-    executor: python2-7
+  setup_trace:
+    executor: python
     steps:
-      - runtests
-  test_python3-5:
-    executor: python3-5
+      - buildevents/start_trace
+  watch:
+    executor: python
     steps:
-      - runtests
-  test_python3-6:
-    executor: python3-6
+      - buildevents/watch_build_and_finish
+  test:
+    parameters:
+      python-version:
+        type: string
+    docker:
+      - image: circleci/python:<<parameters.python-version>>
     steps:
-      - runtests
-  test_python3-7:
-    executor: python3-7
+      - buildevents/with_job_span:
+          steps:
+            - runtests
+  build:
+    executor: python
     steps:
-      - runtests
-  publish:
-    executor: python3-7
+      - buildevents/with_job_span:
+          steps:
+            - build
+  publish_github:
+    executor: github
     steps:
-      - publish
+      - buildevents/with_job_span:
+          steps:
+            - publish_github
+  publish_pypi:
+    executor: python
+    steps:
+      - buildevents/with_job_span:
+          steps:
+            - publish_pypi
 
 workflows:
   version: 2
   build_libhoney:
     jobs:
-      - test_python2-7: *tag_filters
-      - test_python3-5: *tag_filters
-      - test_python3-6: *tag_filters
-      - test_python3-7: *tag_filters
-      - publish:
-          requires:
-            - test_python2-7
-            - test_python3-5
-            - test_python3-6
-            - test_python3-7
+      - setup_trace:
           filters:
             tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              only: /.*/
+      - watch:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - setup_trace
+      - test:
+          matrix:
+            parameters:
+              python-version: ["2.7", "3.5", "3.6", "3.7", "3.8"]
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - setup_trace
+      - build:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - test
+      - publish_github:
+          context: Honeycomb Secrets
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v[0-9].*/
+            branches:
+              ignore: /.*/
+      - publish_pypi:
+          context: Honeycomb Secrets
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v[0-9].*/
             branches:
               ignore: /.*/

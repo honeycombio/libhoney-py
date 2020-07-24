@@ -7,11 +7,7 @@ import mock
 import six
 import tornado
 import libhoney
-import transmission
-
-PATCH_NAMESPACE='transmission'
-if six.PY2:
-    PATCH_NAMESPACE='libhoney.transmission'
+import libhoney.transmission as transmission
 
 
 class TestTornadoTransmissionInit(unittest.TestCase):
@@ -22,9 +18,11 @@ class TestTornadoTransmissionInit(unittest.TestCase):
         self.assertIsInstance(t.responses, tornado.queues.Queue)
         self.assertEqual(t.block_on_send, False)
         self.assertEqual(t.block_on_response, False)
+        self.assertEqual(transmission.has_tornado, True)
 
     def test_args(self):
-        t = transmission.TornadoTransmission(max_concurrent_batches=4, block_on_send=True, block_on_response=True)
+        t = transmission.TornadoTransmission(
+            max_concurrent_batches=4, block_on_send=True, block_on_response=True)
         t.start()
         self.assertEqual(t.block_on_send, True)
         self.assertEqual(t.block_on_response, True)
@@ -32,7 +30,7 @@ class TestTornadoTransmissionInit(unittest.TestCase):
 
     def test_user_agent_addition(self):
         ''' ensure user_agent_addition is included in the User-Agent header '''
-        with mock.patch(PATCH_NAMESPACE + '.AsyncHTTPClient') as m_client:
+        with mock.patch('libhoney.transmission.AsyncHTTPClient') as m_client:
             transmission.TornadoTransmission(user_agent_addition='foo/1.0')
             expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0"
             m_client.assert_called_once_with(
@@ -43,10 +41,11 @@ class TestTornadoTransmissionInit(unittest.TestCase):
 
 class TestTornadoTransmissionSend(unittest.TestCase):
     def test_send(self):
-        with mock.patch(PATCH_NAMESPACE+'.AsyncHTTPClient') as m_http,\
+        with mock.patch('libhoney.transmission.AsyncHTTPClient') as m_http,\
                 mock.patch('statsd.StatsClient') as m_statsd:
             m_http.return_value = mock.Mock()
             m_statsd.return_value = mock.Mock()
+
             @tornado.gen.coroutine
             def _test():
                 t = transmission.TornadoTransmission()
@@ -71,8 +70,8 @@ class TestTornadoTransmissionSend(unittest.TestCase):
 
 
 class TestTornadoTransmissionQueueOverflow(unittest.TestCase):
-     def test_send(self):
-         with mock.patch('statsd.StatsClient') as m_statsd:
+    def test_send(self):
+        with mock.patch('statsd.StatsClient') as m_statsd:
             m_statsd.return_value = mock.Mock()
 
             t = transmission.TornadoTransmission()
@@ -83,6 +82,7 @@ class TestTornadoTransmissionQueueOverflow(unittest.TestCase):
 
             t.send(mock.Mock())
             t.send(mock.Mock())
-            t.send(mock.Mock()) # should overflow sending and land on response
+            t.send(mock.Mock())  # should overflow sending and land on response
             m_statsd.return_value.incr.assert_any_call("queue_overflow")
-            t.send(mock.Mock()) # shouldn't throw exception when response is full
+            # shouldn't throw exception when response is full
+            t.send(mock.Mock())

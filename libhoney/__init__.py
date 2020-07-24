@@ -61,7 +61,8 @@ def init(writekey="", dataset="", sample_rate=1,
 
     **Configuration recommendations**:
 
-    **For gunicorn**, use a [`post_worker_init` config hook](http://docs.gunicorn.org/en/stable/settings.html#post-worker-init) to initialize Honeycomb:
+    **For gunicorn**, use a [`post_worker_init` config hook](http://docs.gunicorn.org/en/stable/settings.html#post-worker-init)
+    to initialize Honeycomb:
 
         # conf.py
         import logging
@@ -138,11 +139,13 @@ def add(data):
         return
     state.G_CLIENT.add(data)
 
+
 def new_event(data={}):
     ''' Creates a new event with the global client. If libhoney has not been
     initialized, sending this event will be a no-op.
     '''
     return Event(data=data, client=state.G_CLIENT)
+
 
 def send_now(data):
     '''
@@ -164,9 +167,10 @@ def send_now(data):
     ev.add(data)
     ev.send()
 
+
 def flush():
-    '''Closes and restarts the transmission, sending all enqueued events 
-    created by the global client. Use this if you want to perform a blocking 
+    '''Closes and restarts the transmission, sending all enqueued events
+    created by the global client. Use this if you want to perform a blocking
     send of all events in your application.
 
     Note: does not work with asynchronous Transmission implementations such
@@ -174,6 +178,7 @@ def flush():
     '''
     if state.G_CLIENT:
         state.G_CLIENT.flush()
+
 
 def close():
     '''Wait for in-flight events to be transmitted then shut down cleanly.
@@ -186,7 +191,8 @@ def close():
     # we should error on post-close sends
     state.G_CLIENT = None
 
-atexit.register(close) # safe because it's a no-op unless init() was called
+
+atexit.register(close)  # safe because it's a no-op unless init() was called
 
 # export everything
 __all__ = [

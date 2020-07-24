@@ -6,6 +6,7 @@ import mock
 import libhoney
 import libhoney.client as client
 
+
 def sample_dyn_fn():
     return "dyna", "magic"
 
@@ -48,7 +49,7 @@ class TestClient(unittest.TestCase):
             c.close()
         except AttributeError:
             self.fail('libhoney threw an exception on '
-                           'an uninitialized close.')
+                      'an uninitialized close.')
 
     def test_add_field(self):
         ed = {"whomp": True}
@@ -80,7 +81,8 @@ class TestClient(unittest.TestCase):
             self.assertEqual(ev.writekey, "client_key")
             self.assertEqual(ev.dataset, "client_dataset")
             # ensure client fields are passed on
-            self.assertEqual(ev._fields._data, {"field1": 1, "field2": 2, "whomp": True, "sample_dyn_fn": ("dyna", "magic")})
+            self.assertEqual(ev._fields._data, {
+                             "field1": 1, "field2": 2, "whomp": True, "sample_dyn_fn": ("dyna", "magic")})
             self.assertEqual(ev._fields._dyn_fields, set([sample_dyn_fn]))
 
     def test_new_builder(self):
@@ -103,7 +105,8 @@ class TestClient(unittest.TestCase):
             ev.add_field("event_field", 2)
             self.assertEqual(ev.client, c)
             # ensure client and builder fields are passed on
-            self.assertEqual(ev._fields._data, {"builder_field": 1, "event_field": 2, "whomp": True, "sample_dyn_fn": ("dyna", "magic")})
+            self.assertEqual(ev._fields._data, {
+                             "builder_field": 1, "event_field": 2, "whomp": True, "sample_dyn_fn": ("dyna", "magic")})
             self.assertEqual(ev._fields._dyn_fields, set([sample_dyn_fn]))
 
     def test_send(self):
@@ -163,8 +166,10 @@ class TestClient(unittest.TestCase):
         with client.Client(transmission_impl=mock_xmit) as c:
             self.assertEqual(c.xmit, mock_xmit)
 
+
 class TestClientFlush(unittest.TestCase):
     ''' separate test class because we don't want to mock transmission'''
+
     def test_flush(self):
         mock_xmit = mock.Mock(spec=libhoney.transmission.Transmission)
         with client.Client(transmission_impl=mock_xmit) as c:

@@ -29,7 +29,7 @@ class Event(object):
         # populate the event's fields
         self._fields = FieldHolder()  # get an empty FH
         if self.client:
-            self._fields += self.client.fields # fill it with the client fields
+            self._fields += self.client.fields  # fill it with the client fields
         self._fields.add(data)        # and anything passed in
         [self._fields.add_dynamic_field(fn) for fn in dyn_fields]
         self._fields += fields
@@ -40,7 +40,6 @@ class Event(object):
         # execute all the dynamic functions and add their data
         for fn in self._fields._dyn_fields:
             self._fields.add_field(fn.__name__, fn())
-
 
     def add_field(self, name, val):
         self._fields.add_field(name, val)
@@ -103,10 +102,12 @@ class Event(object):
         Raises SendError if no fields are defined or critical attributes not
         set (writekey, dataset, api_host).'''
         if self._fields.is_empty():
-            self.client.log("No metrics added to event. Won't send empty event.")
+            self.client.log(
+                "No metrics added to event. Won't send empty event.")
             return
         if self.api_host == "":
-            self.client.log("No api_host for Honeycomb. Can't send to the Great Unknown.")
+            self.client.log(
+                "No api_host for Honeycomb. Can't send to the Great Unknown.")
             return
         if self.writekey == "":
             self.client.log("No writekey specified. Can't send event.")
@@ -126,6 +127,7 @@ class Event(object):
 
     def fields(self):
         return self._fields._data
+
 
 def _should_drop(rate):
     '''returns true if the sample should be dropped'''

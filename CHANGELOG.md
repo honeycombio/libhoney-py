@@ -1,4 +1,12 @@
 # libhoney Changelog
+
+## 1.9.1 2020-07-23
+
+Improvements
+
+- Now using [poetry](https://python-poetry.org/) for packaging and dependency management.
+- Updated to use current CircleCI badge instead of outdated TravisCI badge
+
 ## 1.9.0 2019-08-28
 
 Features
@@ -104,7 +112,6 @@ Fixes
 Fixes
 
 - Batch payloads were not passing timestamp information to the API correctly.
-
 
 ## 1.2.0 2018-03-08
 
