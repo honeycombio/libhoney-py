@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "libhoney"
-version = "1.9.1-dev2" # Update using bump2version
+version = "1.10.0" # Update using bump2version
 description = "Python library for sending data to Honeycomb"
 authors = ["Honeycomb.io <feedback@honeycomb.io>"]
 license = "Apache-2.0"

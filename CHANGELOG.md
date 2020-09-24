@@ -1,5 +1,12 @@
 # libhoney Changelog
 
+## 1.10.0 2020-09-24
+
+Improvements
+
+- Schedule nightly builds on CirleCI (#57)
+- Add .editorconfig to help provide consistent IDE styling (#59)
+
 ## 1.9.1 2020-07-23
 
 Improvements
