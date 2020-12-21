@@ -169,16 +169,19 @@ workflows:
   build_libhoney:
     jobs:
       - setup_trace:
+          context: Honeycomb Secrets for Public Repos
           filters:
             tags:
               only: /.*/
       - watch:
+          context: Honeycomb Secrets for Public Repos
           filters:
             tags:
               only: /.*/
           requires:
             - setup_trace
       - test:
+          context: Honeycomb Secrets for Public Repos
           matrix:
             parameters:
               python-version: ["2.7", "3.5", "3.6", "3.7", "3.8"]
@@ -188,13 +191,14 @@ workflows:
           requires:
             - setup_trace
       - build:
+          context: Honeycomb Secrets for Public Repos
           filters:
             tags:
               only: /.*/
           requires:
             - test
       - publish_github:
-          context: Honeycomb Secrets
+          context: Honeycomb Secrets for Public Repos
           requires:
             - build
           filters:
@@ -203,7 +207,7 @@ workflows:
             branches:
               ignore: /.*/
       - publish_pypi:
-          context: Honeycomb Secrets
+          context: Honeycomb Secrets for Public Repos
           requires:
             - build
           filters:
