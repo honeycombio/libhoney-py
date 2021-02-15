@@ -471,13 +471,14 @@ class FileTransmission():
         # if processed by another honeycomb agent (i.e. agentless integrations
         # for AWS), this data will get used to route the event to the right
         # location with appropriate metadata
-        payload = {
+        payload = {}
+        payload.update(ev.fields())
+        payload.update({
             "time": event_time,
             "samplerate": ev.sample_rate,
             "dataset": ev.dataset,
             "user_agent": self._user_agent,
-            "data": ev.fields(),
-        }
+        })
         self._output.write(json.dumps(
             payload, default=json_default_handler) + "\n")
 

@@ -272,7 +272,8 @@ class TestFileTransmissionSend(unittest.TestCase):
             expected_event_time += "Z"
 
         expected_payload = {
-            "data": {'abc': 1, 'xyz': 2},
+            "abc": 1,
+            "xyz": 2,
             "samplerate": 2.0,
             "dataset": "exciting-dataset!",
             "time": expected_event_time,
@@ -301,7 +302,9 @@ class TestFileTransmissionSend(unittest.TestCase):
             expected_event_time += "Z"
 
         expected_payload = {
-            "data": {'abc': 1, 'xyz': 2, 'dt': str(dt)},
+            "abc": 1,
+            "xyz": 2,
+            "dt": str(dt),
             "samplerate": 2.0,
             "dataset": "exciting-dataset!",
             "time": expected_event_time,
