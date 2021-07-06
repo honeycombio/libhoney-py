@@ -35,7 +35,7 @@ class Transmission():
     def __init__(self, max_concurrent_batches=10, block_on_send=False,
                  block_on_response=False, max_batch_size=100, send_frequency=0.25,
                  user_agent_addition='', debug=False, gzip_enabled=True, gzip_compression_level=1,
-                 proxies={}):
+                 proxies={}, max_pending=1000, max_responses=2000):
         self.max_concurrent_batches = max_concurrent_batches
         self.block_on_send = block_on_send
         self.block_on_response = block_on_response
@@ -57,9 +57,9 @@ class Transmission():
         self.session = session
 
         # libhoney adds events to the pending queue for us to send
-        self.pending = queue.Queue(maxsize=1000)
+        self.pending = queue.Queue(maxsize=max_pending)
         # we hand back responses from the API on the responses queue
-        self.responses = queue.Queue(maxsize=2000)
+        self.responses = queue.Queue(maxsize=max_responses)
 
         self._sending_thread = None
         self.sd = statsd.StatsClient(prefix="libhoney")
@@ -250,7 +250,7 @@ if has_tornado:
     class TornadoTransmission():
         def __init__(self, max_concurrent_batches=10, block_on_send=False,
                      block_on_response=False, max_batch_size=100, send_frequency=timedelta(seconds=0.25),
-                     user_agent_addition=''):
+                     user_agent_addition='', max_pending=1000, max_responses=2000):
             if not has_tornado:
                 raise ImportError(
                     'TornadoTransmission requires tornado, but it was not found.')
@@ -269,9 +269,9 @@ if has_tornado:
                 defaults=dict(user_agent=user_agent))
 
             # libhoney adds events to the pending queue for us to send
-            self.pending = Queue(maxsize=1000)
+            self.pending = Queue(maxsize=max_pending)
             # we hand back responses from the API on the responses queue
-            self.responses = Queue(maxsize=2000)
+            self.responses = Queue(maxsize=max_responses)
 
             self.batch_data = {}
             self.sd = statsd.StatsClient(prefix="libhoney")
