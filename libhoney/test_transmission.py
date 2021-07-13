@@ -20,7 +20,9 @@ class TestTransmissionInit(unittest.TestCase):
         t = transmission.Transmission()
         self.assertEqual(t.max_concurrent_batches, 10)
         self.assertIsInstance(t.pending, queue.Queue)
+        self.assertEqual(t.pending.maxsize, 1000)
         self.assertIsInstance(t.responses, queue.Queue)
+        self.assertEqual(t.responses.maxsize, 2000)
         self.assertEqual(t.block_on_send, False)
         self.assertEqual(t.block_on_response, False)
 
@@ -134,9 +136,7 @@ class TestTransmissionSend(unittest.TestCase):
 
 class TestTransmissionQueueOverflow(unittest.TestCase):
     def test_send(self):
-        t = transmission.Transmission()
-        t.pending = queue.Queue(maxsize=2)
-        t.responses = queue.Queue(maxsize=1)
+        t = transmission.Transmission(max_pending=2, max_responses=1)
 
         t.send(FakeEvent())
         t.send(FakeEvent())
