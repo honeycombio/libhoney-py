@@ -1,5 +1,19 @@
 # libhoney Changelog
 
+## 1.11.0 2021-07-14
+
+Improvements
+
+- Make transmission queue sizes configurable (#69)
+
+## Maintenance 
+
+- Updates Github Action Workflows (#68)
+- Adds dependabot (#67)
+- Switches CODEOWNERS to telemetry-team (#66)
+- add our custom action to manage project labels (#64)
+- Use public CircleCI context for build secrets (#63)
+
 ## 1.10.0 2020-09-24
 
 Improvements
