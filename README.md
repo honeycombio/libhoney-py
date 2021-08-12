@@ -1,5 +1,6 @@
 # libhoney-py
 
+[![OSS Lifecycle](https://img.shields.io/osslifecycle/honeycombio/libhoney-py)](https://github.com/honeycombio/home/blob/main/honeycomb-oss-lifecycle-and-practices.md)
 [![Build Status](https://circleci.com/gh/honeycombio/libhoney-py.svg?style=svg)](https://app.circleci.com/pipelines/github/honeycombio/libhoney-py)
 
 Python library for sending events to [Honeycomb](https://honeycomb.io), a service for debugging your software in production.
