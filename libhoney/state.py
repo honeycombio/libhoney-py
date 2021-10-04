@@ -9,5 +9,5 @@ def warn_uninitialized():
     log = logging.getLogger(__name__)
     global WARNED_UNINITIALIZED
     if not WARNED_UNINITIALIZED:
-        log.warn("global libhoney method used before initialization")
+        log.warning("global libhoney method used before initialization")
         WARNED_UNINITIALIZED = True
