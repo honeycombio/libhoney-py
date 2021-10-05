@@ -6,7 +6,6 @@
 Python library for sending events to [Honeycomb](https://honeycomb.io), a service for debugging your software in production.
 
 - [Usage and Examples](https://docs.honeycomb.io/sdk/python/)
-- [API Reference](https://honeycombio.github.io/libhoney-py/)
 
 For tracing support and automatic instrumentation of Django, Flask, AWS Lambda, and other frameworks, check out our [Beeline for Python](https://github.com/honeycombio/beeline-python).
 
