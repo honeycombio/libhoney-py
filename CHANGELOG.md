@@ -1,4 +1,19 @@
-# libhoney Changelog
+# libhoney-py Changelog
+
+## 1.11.1 2021-10-08
+
+Fixes
+
+- Drop use of long-deprecated `warn()` method (#77)
+
+Maintenance
+
+- Remove API Reference broken link from README (#79)
+- Change maintenance badge to maintained (#75)
+- Adds Stalebot (#76)
+- Add issue and PR templates (#74)
+- Add OSS lifecycle badge (#73)
+- Add community health files (#72)
 
 ## 1.11.0 2021-07-14
 
@@ -6,7 +21,7 @@ Improvements
 
 - Make transmission queue sizes configurable (#69)
 
-## Maintenance 
+Maintenance
 
 - Updates Github Action Workflows (#68)
 - Adds dependabot (#67)
