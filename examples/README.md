@@ -6,15 +6,8 @@
 
 ## Installation
 
-To build the examples:
+Inside each example directory:
 
-1. `virtualenv examples_env`
-2. `source examples_env/bin/activate`
-3. `pip install -r ./requirements.txt`
-4. `(cd ../ &&  python setup.py install) # this installs libhoney`
-
-And then on each example:
-
-5. `cd $example-dir`
-6. `python manage.py migrate # initialize the project`
-7. `HONEY_WRITE_KEY=YOUR_WRITE_KEY HONEY_DATASET=YOUR_DATASET python manage.py runserver`
+1. `poetry install`
+2. `poetry run python manage.py migrate # initialize the project`
+3. `HONEYCOMB_API_KEY=api-key HONEYCOMB_DATASET=django-example poetry run python manage.py runserver`

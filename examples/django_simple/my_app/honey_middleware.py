@@ -4,8 +4,8 @@ import libhoney
 
 class HoneyMiddleware(object):
     def __init__(self):
-        libhoney.init(writekey=os.environ["HONEY_WRITE_KEY"],
-                      dataset=os.environ["HONEY_DATASET"])
+        libhoney.init(writekey=os.environ["HONEYCOMB_API_KEY"],
+                      dataset=os.environ["HONEYCOMB_DATASET"])
 
 
     def process_request(self, request):
