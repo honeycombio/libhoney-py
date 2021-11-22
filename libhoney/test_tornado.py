@@ -1,5 +1,4 @@
 '''Tests for libhoney/transmission.py'''
-import asyncio
 import datetime
 import unittest
 
@@ -43,7 +42,7 @@ class TestTornadoTransmissionSend(unittest.TestCase):
     def test_send(self):
         with mock.patch('libhoney.transmission.AsyncHTTPClient.fetch') as fetch_mock,\
                 mock.patch('statsd.StatsClient') as m_statsd:
-            future = asyncio.Future()
+            future = tornado.concurrent.Future()
             future.set_result("OK")
             fetch_mock.return_value = future
             m_statsd.return_value = mock.Mock()
@@ -78,7 +77,7 @@ class TestTornadoTransmissionSendError(unittest.TestCase):
     def test_send(self):
         with mock.patch('libhoney.transmission.AsyncHTTPClient.fetch') as fetch_mock,\
                 mock.patch('statsd.StatsClient') as m_statsd:
-            future = asyncio.Future()
+            future = tornado.concurrent.Future()
             ex = Exception("oh poo!")
             future.set_exception(ex)
             fetch_mock.return_value = future
