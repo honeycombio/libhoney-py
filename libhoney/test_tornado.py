@@ -1,11 +1,11 @@
 '''Tests for libhoney/transmission.py'''
-
+import asyncio
 import datetime
 import unittest
 
 import mock
-import six
 import tornado
+
 import libhoney
 import libhoney.transmission as transmission
 
@@ -41,9 +41,11 @@ class TestTornadoTransmissionInit(unittest.TestCase):
 
 class TestTornadoTransmissionSend(unittest.TestCase):
     def test_send(self):
-        with mock.patch('libhoney.transmission.AsyncHTTPClient') as m_http,\
+        with mock.patch('libhoney.transmission.AsyncHTTPClient.fetch') as fetch_mock,\
                 mock.patch('statsd.StatsClient') as m_statsd:
-            m_http.return_value = mock.Mock()
+            future = asyncio.Future()
+            future.set_result("OK")
+            fetch_mock.return_value = future
             m_statsd.return_value = mock.Mock()
 
             @tornado.gen.coroutine
@@ -60,13 +62,48 @@ class TestTornadoTransmissionSend(unittest.TestCase):
                 # wait on the batch to be "sent"
                 # we can detect this when data has been inserted into the
                 # batch data dictionary
+                start_time = datetime.datetime.now()
                 while not t.batch_data:
+                    if datetime.datetime.now() - start_time > datetime.timedelta(0, 10):
+                        self.fail("timed out waiting on batch send")
                     yield tornado.gen.sleep(0.01)
                 t.close()
 
             tornado.ioloop.IOLoop.current().run_sync(_test)
             m_statsd.return_value.incr.assert_any_call("messages_queued")
-            self.assertTrue(m_http.return_value.fetch.called)
+            self.assertTrue(fetch_mock.called)
+
+
+class TestTornadoTransmissionSendError(unittest.TestCase):
+    def test_send(self):
+        with mock.patch('libhoney.transmission.AsyncHTTPClient.fetch') as fetch_mock,\
+                mock.patch('statsd.StatsClient') as m_statsd:
+            future = asyncio.Future()
+            ex = Exception("oh poo!")
+            future.set_exception(ex)
+            fetch_mock.return_value = future
+            m_statsd.return_value = mock.Mock()
+
+            @tornado.gen.coroutine
+            def _test():
+                t = transmission.TornadoTransmission()
+                t.start()
+
+                ev = mock.Mock(metadata=None, writekey="abc123",
+                               dataset="blargh", api_host="https://example.com",
+                               sample_rate=1, created_at=datetime.datetime.now())
+                ev.fields.return_value = {"foo": "bar"}
+                t.send(ev)
+
+                try:
+                    resp = yield t.responses.get(datetime.timedelta(0, 10))
+                    self.assertEqual(resp["error"], ex)
+                except tornado.util.TimeoutError:
+                    self.fail("timed out waiting on response queue")
+                finally:
+                    t.close()
+
+            tornado.ioloop.IOLoop.current().run_sync(_test)
 
 
 class TestTornadoTransmissionQueueOverflow(unittest.TestCase):
