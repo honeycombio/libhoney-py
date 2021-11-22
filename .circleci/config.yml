@@ -169,7 +169,6 @@ workflows:
   build_libhoney:
     jobs:
       - setup_trace:
-          context: Honeycomb Secrets for Public Repos
           filters:
             tags:
               only: /.*/
@@ -178,6 +177,10 @@ workflows:
           filters:
             tags:
               only: /.*/
+            branches:
+              ignore:
+              - /pull\/.*/
+              - /dependabot\/.*/
           requires:
             - setup_trace
       - test:
