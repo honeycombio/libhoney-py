@@ -372,7 +372,7 @@ if has_tornado:
                     },
                     body=json.dumps(payload, default=json_default_handler),
                 )
-                self.http_client.fetch(req, self._response_callback)
+                yield self.http_client.fetch(req, self._response_callback)
                 # store the events that were sent so we can process responses later
                 # it is important that we delete these eventually, or we'll run into memory issues
                 self.batch_data[req] = {"start": start, "events": events}
