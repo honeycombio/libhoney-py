@@ -1,5 +1,20 @@
 # libhoney-py Changelog
 
+## 1.11.2 2021-12-01
+
+Fixes
+
+- Fix tornado error handling (#88)
+
+Maintenance
+
+- ci: fix dependabot builds (#93)
+- Update dependabot to monthly (#92)
+- ci: add python 3.9 and 3.10 to test matrix (#90)
+- ci: allow dependabot build to run (#89)
+- fix local exampels, use poetry (#84)
+- empower apply-labels action to apply labels (#82)
+
 ## 1.11.1 2021-10-08
 
 Fixes
