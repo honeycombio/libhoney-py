@@ -43,6 +43,7 @@ class HoneyMiddleware(object):
             maxrss_after,
         ])
         response = self.get_response(request)
+        # creating new event will call the dynamic fields functions
         event = honey_builder.new_event()
         event.send()
 
