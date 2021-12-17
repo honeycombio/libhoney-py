@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "django_simple"
+name = "libhoney-django-simple-example"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Django example using libhoney"
+authors = ["honeycombio"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
