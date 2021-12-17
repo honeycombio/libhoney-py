@@ -1,16 +1,17 @@
 import os
 import resource
+
 import libhoney
 
 
 class HoneyMiddleware(object):
-    def __init__(self):
+    def __init__(self, get_response):
+        self.get_response = get_response
         libhoney.init(writekey=os.environ["HONEYCOMB_API_KEY"],
-                      dataset=os.environ["HONEYCOMB_DATASET"])
+                      dataset=os.environ.get("HONEYCOMB_DATASET", "django-example"),
+                      api_host=os.environ.get("HONEYCOMB_API_ENDPOINT", "https://api.honeycomb.io"))
 
-
-    def process_request(self, request):
-
+    def __call__(self, request):
         def usertime_after():
             return resource.getrusage(resource.RUSAGE_SELF).ru_utime
 
@@ -20,14 +21,15 @@ class HoneyMiddleware(object):
         def maxrss_after():
             return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 
-        request.honey_builder = libhoney.Builder({
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        honey_builder = libhoney.Builder({
             "method": request.method,
             "scheme": request.scheme,
             "path": request.path,
             "query": request.GET,
             "isSecure": request.is_secure(),
-            "isAjax": request.is_ajax(),
-            "isUserAuthenticated": request.user.is_authenticated(),
+            "isAjax": is_ajax,
+            "isUserAuthenticated": request.user.is_authenticated,
             "username": request.user.username,
             "host": request.get_host(),
             "ip": request.META['REMOTE_ADDR'],
@@ -40,14 +42,8 @@ class HoneyMiddleware(object):
             kerneltime_after,
             maxrss_after,
         ])
-
-        return None
-
-
-    def process_response(self, request, response):
-        builder = request.honey_builder
-        ev = builder.new_event()
-        ev.send()
+        response = self.get_response(request)
+        event = honey_builder.new_event()
+        event.send()
 
         return response
-
