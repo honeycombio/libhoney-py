@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "libhoney-django-response-time-example"
 version = "0.1.0"
-description = "Django example using libhoney"
+description = "Django example with response time using libhoney"
 authors = ["honeycombio"]
 
 [tool.poetry.dependencies]
