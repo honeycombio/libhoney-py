@@ -40,7 +40,7 @@ class FieldHolder:
             for k, v in data.items():
                 self.add_field(k, v)
         except AttributeError:
-            raise TypeError("add requires a dict-like argument")
+            raise TypeError("add requires a dict-like argument") from None
 
     def is_empty(self):
         '''returns true if there is no data in this FieldHolder'''
