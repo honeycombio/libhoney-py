@@ -1,5 +1,20 @@
 # libhoney-py Changelog
 
+## 2.0.0 2022-01-12
+
+### !!! Breaking Changes !!!
+
+Minimum supported Python version is now 3.5
+
+### Maintenance
+
+- drop python 2.7 support (#103)| [@vreynolds](https://github.com/vreynolds)
+- bump urllib3, and other dependencies (#102) | [@vreynolds](https://github.com/vreynolds)
+- gh: add re-triage workflow (#101) | [@vreynolds](https://github.com/vreynolds)
+- docs: upgrade django examples: simple (#96) | [@vreynolds](https://github.com/vreynolds)
+- docs: upgrade django examples: response time (#97) | [@vreynolds](https://github.com/vreynolds)
+- docs: upgrade examples: dynamic fields (#98) | [@vreynolds](https://github.com/vreynolds)
+
 ## 1.11.2 2021-12-01
 
 Fixes
