@@ -31,6 +31,39 @@ class TestClient(unittest.TestCase):
         self.assertEqual(c.sample_rate, 2)
         self.assertEqual(c.xmit, self.tx)
 
+    def test_init_sets_no_default_key_if_missing(self):
+        c = client.Client(writekey="", dataset="test")
+        self.assertEqual(c.writekey, "")
+
+    def test_init_sets_no_default_dataset_if_classic_key(self):
+        c = client.Client(writekey="c1a551c1111111111111111111111111", dataset="")
+        self.assertEqual(c.writekey, "c1a551c1111111111111111111111111")
+        self.assertEqual(c.dataset, "")
+
+    def test_init_sets_no_default_dataset_if_missing_key(self):
+        c = client.Client(writekey="", dataset="")
+        self.assertEqual(c.writekey, "")
+        self.assertEqual(c.dataset, "")
+
+    def test_init_sets_default_dataset_with_non_classic_key(self):
+        c = client.Client(writekey="shinynewenvironmentkey", dataset="")
+        self.assertEqual(c.writekey, "shinynewenvironmentkey")
+        self.assertEqual(c.dataset, "unknown_dataset")
+
+    def test_init_does_not_trim_dataset_with_classic_key(self):
+        c = client.Client(writekey="c1a551c1111111111111111111111111", dataset=" my dataset ")
+        self.assertEqual(c.writekey, "c1a551c1111111111111111111111111")
+        self.assertEqual(c.dataset, " my dataset ")
+
+    def test_init_trims_dataset_with_non_classic_key(self):
+        c = client.Client(writekey="shinynewenvironmentkey", dataset=" my dataset ")
+        self.assertEqual(c.writekey, "shinynewenvironmentkey")
+        self.assertEqual(c.dataset, "my dataset")
+
+    def test_init_sets_default_api_host(self):
+        c = client.Client(writekey="foo", dataset="bar")
+        self.assertEqual(c.api_host, "https://api.honeycomb.io")
+
     def test_close(self):
         c = client.Client(writekey="foo", dataset="bar", api_host="blup",
                           sample_rate=2)
