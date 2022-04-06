@@ -105,10 +105,10 @@ class Client(object):
 
         # whitespace detected. trim whitespace, warn on diff
         if dataset.strip() != dataset and not IsClassicKey(writekey):
-                logging.error(
-                    'dataset has unexpected spaces'
-                )
-                self.dataset = dataset.strip()
+            logging.error(
+                'dataset has unexpected spaces'
+            )
+            self.dataset = dataset.strip()
 
     # enable use in a context manager
     def __enter__(self):
