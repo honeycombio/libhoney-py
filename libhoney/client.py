@@ -1,3 +1,5 @@
+import logging
+
 from six.moves import queue
 
 from libhoney.event import Event
@@ -83,14 +85,30 @@ class Client(object):
         if debug:
             self._init_logger()
 
+        def IsClassicKey(key):
+            return (len(key) == 32 or key == "")
+
         self.log('initialized honeycomb client: writekey=%s dataset=%s',
                  writekey, dataset)
         if not writekey:
             self.log(
                 'writekey not set! set the writekey if you want to send data to honeycomb')
         if not dataset:
-            self.log(
-                'dataset not set! set a value for dataset if you want to send data to honeycomb')
+            if IsClassicKey(writekey):
+                self.log(
+                    'dataset not set! set a value for dataset if you want to send data to honeycomb')
+            else:
+                logging.error(
+                    'dataset not set! sending to unknown_dataset'
+                )
+                self.dataset = "unknown_dataset"
+
+        # whitespace detected. trim whitespace, warn on diff
+        if dataset.strip() != dataset and not IsClassicKey(writekey):
+            logging.error(
+                'dataset has unexpected spaces'
+            )
+            self.dataset = dataset.strip()
 
     # enable use in a context manager
     def __enter__(self):
