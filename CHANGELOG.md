@@ -1,5 +1,17 @@
 # libhoney-py Changelog
 
+## 2.1.0
+
+### Added
+
+- feat: Add environment & services support (#111)
+
+### Maintenance
+
+- Bump django from 4.0.1 to 4.0.2 in /examples/django_response_time (#108)
+- Bump django from 4.0.1 to 4.0.2 in /examples/django_simple (#107)
+- Bump django from 4.0.1 to 4.0.2 in /examples/django_dynamic_fields (#106)
+
 ## 2.0.0 2022-01-12
 
 ### !!! Breaking Changes !!!

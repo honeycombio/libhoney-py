@@ -67,7 +67,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "libhoney"
-version = "2.0.0"
+version = "2.1.0"
 description = "Python library for sending data to Honeycomb"
 category = "main"
 optional = false
