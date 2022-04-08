@@ -1,10 +1,10 @@
 # libhoney-py Changelog
 
-## 2.1.0
+## 2.1.0 2022-04-08
 
 ### Added
 
-- feat: Add environment & services support (#111)
+- feat: Add environment & services support (#111) | [@JamieDanielson](https://github.com/JamieDanielson)
 
 ### Maintenance
 
