@@ -1,7 +1,7 @@
 '''Tests for libhoney/client.py'''
 
 import unittest
-import mock
+from unittest import mock
 
 import libhoney
 import libhoney.client as client

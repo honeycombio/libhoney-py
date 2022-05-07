@@ -15,7 +15,7 @@ You can find an example demonstrating usage in example.py'''
 
 import atexit
 import random
-from six.moves.queue import Queue
+from queue import Queue
 
 import libhoney.state as state
 from libhoney.client import Client

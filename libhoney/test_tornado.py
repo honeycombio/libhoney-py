@@ -1,8 +1,8 @@
 '''Tests for libhoney/transmission.py'''
 import datetime
 import unittest
+from unittest import mock
 
-import mock
 import tornado
 
 import libhoney

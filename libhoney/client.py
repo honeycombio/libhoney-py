@@ -1,6 +1,5 @@
 import logging
-
-from six.moves import queue
+import queue
 
 from libhoney.event import Event
 from libhoney.builder import Builder
