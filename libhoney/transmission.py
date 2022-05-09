@@ -1,8 +1,8 @@
 '''Transmission handles colleting and sending individual events to Honeycomb'''
 from datetime import timedelta
+import queue
+from urllib.parse import urljoin
 
-from six.moves import queue
-from six.moves.urllib.parse import urljoin
 import gzip
 import io
 import json

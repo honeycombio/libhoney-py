@@ -8,11 +8,11 @@ import datetime
 import gzip
 import io
 import json
-import mock
+from unittest import mock
 import requests_mock
 import time
 import unittest
-from six.moves import queue
+import queue
 
 
 class TestTransmissionInit(unittest.TestCase):
