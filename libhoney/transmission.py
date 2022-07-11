@@ -7,7 +7,6 @@ import gzip
 import io
 import json
 import threading
-import requests
 import statsd
 import sys
 import time
@@ -48,7 +47,7 @@ class Transmission():
         if user_agent_addition:
             user_agent += " " + user_agent_addition
 
-        session = requests.Session()
+        session = self._get_requests_session()
         session.headers.update({"User-Agent": user_agent})
         if self.gzip_enabled:
             session.headers.update({"Content-Encoding": "gzip"})
@@ -67,6 +66,12 @@ class Transmission():
         self.debug = debug
         if debug:
             self._init_logger()
+
+    @staticmethod
+    def _get_requests_session():
+        # lazy load requests only when needed
+        import requests  # pylint: disable=import-outside-toplevel
+        return requests.Session()
 
     def _init_logger(self):
         import logging  # pylint: disable=bad-option-value,import-outside-toplevel
