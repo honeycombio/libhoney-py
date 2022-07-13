@@ -1,5 +1,18 @@
 # libhoney-py Changelog
 
+## 2.1.1 2022-07-13
+
+### Improvements
+
+- Lazy load requests in Transmission class (#121) | [@danvendia](https://github.com/danvendia)
+- Remove six and mock dependencies. (#117) | [@iurisilvio](https://github.com/iurisilvio)
+
+### Maintenance
+
+- Bump django from 4.0.2 to 4.0.6 in /examples/django_response_time (#115,#118) | [dependabot](https://github.com/dependabot)
+- Bump django from 4.0.2 to 4.0.6 in /examples/django_dynamic_fields (#114,#120) | [dependabot](https://github.com/dependabot)
+- Bump django from 4.0.2 to 4.0.6 in /examples/django_simple (#113,#119) | [dependabot](https://github.com/dependabot)
+
 ## 2.1.0 2022-04-08
 
 ### Added
