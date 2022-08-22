@@ -9,6 +9,9 @@ import gzip
 import io
 import json
 from unittest import mock
+from requests import Session
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry  import Retry
 import requests_mock
 import time
 import unittest
@@ -90,6 +93,15 @@ class TestTransmissionSend(unittest.TestCase):
             "metadata": None, "body": "",
             "error": "event dropped; queue overflow",
         })
+
+    def test_send_batch_will_retry_once(self):
+        # use session retry strategy defined in transmission get_session_request
+            # ?  with requests_mock.Mocker(session=libhoney.transmission.Transmission._get_requests_session()) as m:
+            # ? (transmission.Transmission._get_requests_session) as m_session:
+        # mock a post that sends a timeout response like we would expect, then a success
+            # what does our timeout response look like?
+        # expect response to be a success
+        assert True == True
 
     def test_send_gzip(self):
         libhoney.init()

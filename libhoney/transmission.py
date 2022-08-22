@@ -70,8 +70,26 @@ class Transmission():
     @staticmethod
     def _get_requests_session():
         # lazy load requests only when needed
-        import requests  # pylint: disable=import-outside-toplevel
-        return requests.Session()
+        # import requests  # pylint: disable=import-outside-toplevel
+
+        # retry_strategy = requests.packages.urllib3.util.retry.Retry(total=1, allowed_methods=['POST']) #allow 1 retry on post
+        # http_adapter = requests.adapters.HTTPAdapter(max_retries=retry_strategy)
+
+        # session = requests.Session()
+        # session.mount("http://", http_adapter)
+        # return session
+
+        from requests import Session
+        from requests.adapters import HTTPAdapter
+        from requests.packages.urllib3.util.retry import Retry
+
+        retry_strategy = Retry(total=1, allowed_methods=["POST"]) #allow 1 retry on post
+        http_adapter = HTTPAdapter(max_retries=retry_strategy)
+
+        session = Session()
+        session.mount("http://", http_adapter)
+        return session
+
 
     def _init_logger(self):
         import logging  # pylint: disable=bad-option-value,import-outside-toplevel
