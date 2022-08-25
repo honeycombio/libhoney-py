@@ -6,12 +6,10 @@ from libhoney.version import VERSION
 
 import datetime
 import gzip
+import httpretty
 import io
 import json
 from unittest import mock
-from requests import Session
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry  import Retry
 import requests_mock
 import time
 import unittest
@@ -94,41 +92,46 @@ class TestTransmissionSend(unittest.TestCase):
             "error": "event dropped; queue overflow",
         })
 
+    @httpretty.activate
     def test_send_batch_will_retry_once(self):
         libhoney.init()
-        with requests_mock.Mocker() as m:
-            m.post("http://urlme/1/batch/datame", [ {'status_code': 500},
-                {'text': json.dumps([{"status": 202}]), 'status_code': 200}])
-            # https://requests-mock.readthedocs.io/en/latest/response.html#response-lists
+        # create two responses to the batch event post
+        # first timeout, then accept the batch
+        httpretty.register_uri(
+            httpretty.POST,
+            "http://urlme/1/batch/datame",
+            responses=[
+                httpretty.Response(
+                    body='{"message": "Timeout"}',
+                    status=500,
+                ),
+                httpretty.Response(
+                    body=json.dumps([{"status": 202}]),
+                    status=200,
+                ),
+            ]
+        )
 
-            t = transmission.Transmission()
-            # print(t.session.adapters['http://'].__dict__) # max_retries': Retry(total=1, connect=None, read=None, redirect=None, status=None)
-            t.start()
-            ev = libhoney.Event() 
-            ev.writekey = "writeme"
-            ev.dataset = "datame"
-            ev.api_host = "http://urlme/"
-            ev.metadata = "metadaaata"
-            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
-            t.send(ev) #send once, but session will sent twice bc retry?
-            t.close()
-
-            # for req in m.request_history:
-            #     print(req)
-            # print(m.call_count)
-
-            # POST http://urlme/1/batch/datame
-            # 1
-
-            resp_count = 0
-            while not t.responses.empty():
-                resp = t.responses.get()
-                if resp is None:
-                    break
-                # print(resp) # {'status_code': 500, 'body': '', 'error': HTTPError('500 Server Error: None for url: http://urlme/1/batch/datame'), 'duration': 2.153158187866211, 'metadata': 'metadaaata'}
-                assert resp["status_code"] == 202
-                assert resp["metadata"] == "metadaaata"
-                resp_count += 1
+        t = transmission.Transmission()
+        t.start()
+        ev = libhoney.Event() 
+        ev.writekey = "writeme"
+        ev.dataset = "datame"
+        ev.api_host = "http://urlme/"
+        ev.metadata = "metadaaata"
+        ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+        t.send(ev)
+        t.close()
+        
+        resp_count = 0
+        while not t.responses.empty():
+            resp = t.responses.get()
+            if resp is None:
+                break
+            # verify the batch was accepted
+            assert resp["status_code"] == 202
+            assert resp["metadata"] == "metadaaata"
+            resp_count += 1
 
     def test_send_gzip(self):
         libhoney.init()
