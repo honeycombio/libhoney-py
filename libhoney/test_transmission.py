@@ -114,7 +114,7 @@ class TestTransmissionSend(unittest.TestCase):
 
         t = transmission.Transmission()
         t.start()
-        ev = libhoney.Event() 
+        ev = libhoney.Event()
         ev.writekey = "writeme"
         ev.dataset = "datame"
         ev.api_host = "http://urlme/"
@@ -122,7 +122,7 @@ class TestTransmissionSend(unittest.TestCase):
         ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
         t.send(ev)
         t.close()
-        
+
         resp_count = 0
         while not t.responses.empty():
             resp = t.responses.get()

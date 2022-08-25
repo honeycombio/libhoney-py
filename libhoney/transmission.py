@@ -72,9 +72,9 @@ class Transmission():
 
     @staticmethod
     def _get_requests_session():
-        retry_strategy = Retry(total=1, 
-            status_forcelist=[500, 503, 504, 408, 429], #retry status codes
-            allowed_methods=["POST"]) #allow 1 retry on post
+        retry_strategy = Retry(total=1,
+                               status_forcelist=[500, 503, 504, 408, 429],  # retry status codes
+                               allowed_methods=["POST"])  # allow 1 retry on post
         http_adapter = HTTPAdapter(max_retries=retry_strategy)
 
         session = Session()
