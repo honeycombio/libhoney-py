@@ -95,13 +95,31 @@ class TestTransmissionSend(unittest.TestCase):
         })
 
     def test_send_batch_will_retry_once(self):
-        # use session retry strategy defined in transmission get_session_request
-            # ?  with requests_mock.Mocker(session=libhoney.transmission.Transmission._get_requests_session()) as m:
-            # ? (transmission.Transmission._get_requests_session) as m_session:
-        # mock a post that sends a timeout response like we would expect, then a success
-            # what does our timeout response look like?
-        # expect response to be a success
-        assert True == True
+        libhoney.init()
+        with requests_mock.Mocker() as m:
+            m.post("http://urlme/1/batch/datame", status_code=500)
+            m.post("http://urlme/1/batch/datame", json=[{"status": 202}], status_code=200,
+
+            t = transmission.Transmission()
+            t.start()
+            ev = libhoney.Event() 
+            ev.writekey = "writeme"
+            ev.dataset = "datame"
+            ev.api_host = "http://urlme/"
+            ev.metadata = "metadaaata"
+            ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+            t.send(ev) #send once, but session will sent twice bc retry
+            t.close()
+    
+            resp_count = 0
+            while not t.responses.empty():
+                resp = t.responses.get()
+                if resp is None:
+                    break
+                assert resp["status_code"] == 202
+                assert resp["metadata"] == "metadaaata"
+                resp_count += 1
+            assert resp_count == 1
 
     def test_send_gzip(self):
         libhoney.init()
