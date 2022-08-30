@@ -274,7 +274,7 @@ if has_tornado:
             self.max_batch_size = max_batch_size
             self.send_frequency = send_frequency
 
-            user_agent = "libhoney-py/" + VERSION
+            user_agent = "libhoney-py/" + VERSION + " (Tornado)"
             if user_agent_addition:
                 user_agent += " " + user_agent_addition
 
