@@ -1,11 +1,10 @@
 '''This example shows how to use some of the features of libhoney in python'''
-
+import os
 import datetime
 import libhoney
-import signal
 import threading
 
-writekey = "abcabc123123defdef456456"
+writekey = os.environ["HONEYCOMB_API_KEY"]
 dataset = "factorial"
 
 
