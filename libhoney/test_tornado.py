@@ -31,7 +31,7 @@ class TestTornadoTransmissionInit(unittest.TestCase):
         ''' ensure user_agent_addition is included in the User-Agent header '''
         with mock.patch('libhoney.transmission.AsyncHTTPClient') as m_client:
             transmission.TornadoTransmission(user_agent_addition='foo/1.0')
-            expected = "libhoney-py/" + libhoney.version.VERSION + " (Tornado)" + " foo/1.0"
+            expected = "libhoney-py/" + libhoney.version.VERSION + f" (tornado/{tornado.version})" + " foo/1.0"
             m_client.assert_called_once_with(
                 force_instance=True,
                 defaults=dict(user_agent=expected),

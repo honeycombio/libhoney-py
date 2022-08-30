@@ -13,6 +13,6 @@ Inside each example directory:
 2. `poetry run python manage.py migrate # initialize the project`
 3. `HONEYCOMB_API_KEY=api-key HONEYCOMB_DATASET=django-example poetry run python manage.py runserver`
    
-For Tornado example, just do
+For Tornado example, there's no need to run the migrate step. Do only this:
 1. `poetry install`
 2. `HONEYCOMB_API_KEY=api-key poetry run python3 example_tornado.py`
