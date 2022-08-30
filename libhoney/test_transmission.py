@@ -6,6 +6,7 @@ from libhoney.version import VERSION
 
 import datetime
 import gzip
+import httpretty
 import io
 import json
 from unittest import mock
@@ -90,6 +91,47 @@ class TestTransmissionSend(unittest.TestCase):
             "metadata": None, "body": "",
             "error": "event dropped; queue overflow",
         })
+
+    @httpretty.activate
+    def test_send_batch_will_retry_once(self):
+        libhoney.init()
+        # create two responses to the batch event post
+        # first timeout, then accept the batch
+        httpretty.register_uri(
+            httpretty.POST,
+            "http://urlme/1/batch/datame",
+            responses=[
+                httpretty.Response(
+                    body='{"message": "Timeout"}',
+                    status=500,
+                ),
+                httpretty.Response(
+                    body=json.dumps([{"status": 202}]),
+                    status=200,
+                ),
+            ]
+        )
+
+        t = transmission.Transmission()
+        t.start()
+        ev = libhoney.Event()
+        ev.writekey = "writeme"
+        ev.dataset = "datame"
+        ev.api_host = "http://urlme/"
+        ev.metadata = "metadaaata"
+        ev.created_at = datetime.datetime(2013, 1, 1, 11, 11, 11)
+        t.send(ev)
+        t.close()
+
+        resp_count = 0
+        while not t.responses.empty():
+            resp = t.responses.get()
+            if resp is None:
+                break
+            # verify the batch was accepted
+            assert resp["status_code"] == 202
+            assert resp["metadata"] == "metadaaata"
+            resp_count += 1
 
     def test_send_gzip(self):
         libhoney.init()
