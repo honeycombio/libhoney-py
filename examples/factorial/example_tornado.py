@@ -1,3 +1,4 @@
+import os
 from tornado import ioloop, gen
 import libhoney
 from libhoney.transmission import TornadoTransmission
@@ -33,7 +34,7 @@ def event_routine():
 @gen.coroutine
 def main():
     global g_hc
-    g_hc = libhoney.Client(writekey="abcabc123123defdef456456", dataset="factorial.tornado",
+    g_hc = libhoney.Client(writekey=os.environ["HONEYCOMB_API_KEY"], dataset="factorial.tornado",
         transmission_impl=TornadoTransmission())
     ioloop.IOLoop.current().spawn_callback(event_routine)
 

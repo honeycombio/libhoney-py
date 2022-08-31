@@ -25,6 +25,7 @@ try:
     from tornado.locks import Semaphore
     from tornado.queues import Queue, QueueFull
     from tornado.util import TimeoutError
+    from tornado import version as tornado_version
     has_tornado = True
 except ImportError:
     has_tornado = False
@@ -274,7 +275,7 @@ if has_tornado:
             self.max_batch_size = max_batch_size
             self.send_frequency = send_frequency
 
-            user_agent = "libhoney-py/" + VERSION
+            user_agent = "libhoney-py/" + VERSION + " (tornado/{})".format(tornado_version)
             if user_agent_addition:
                 user_agent += " " + user_agent_addition
 
