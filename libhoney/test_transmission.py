@@ -40,6 +40,12 @@ class TestTransmissionInit(unittest.TestCase):
     def test_user_agent_addition(self):
         ''' ensure user_agent_addition is included in the User-Agent header '''
         with mock.patch('libhoney.transmission.Transmission._get_requests_session') as m_session:
+            transmission.Transmission(gzip_enabled=False)
+            expected = "libhoney-py/" + libhoney.version.VERSION + " python/" + python_version()
+            m_session.return_value.headers.update.assert_called_once_with({
+                'User-Agent': expected
+            })
+        with mock.patch('libhoney.transmission.Transmission._get_requests_session') as m_session:
             transmission.Transmission(
                 user_agent_addition='foo/1.0', gzip_enabled=False)
             expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0" + " python/" + python_version()
