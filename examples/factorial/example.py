@@ -19,7 +19,7 @@ def factorial(n):
 def num_threads():
     '''add information about the number of threads currently running to the
        event'''
-    return threading.activeCount()
+    return threading.active_count()
 
 
 # run factorial. libh_builder comes with some fields already populated
