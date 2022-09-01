@@ -3,6 +3,7 @@
 import libhoney
 import libhoney.transmission as transmission
 from libhoney.version import VERSION
+from platform import python_version
 
 import datetime
 import gzip
@@ -41,7 +42,7 @@ class TestTransmissionInit(unittest.TestCase):
         with mock.patch('libhoney.transmission.Transmission._get_requests_session') as m_session:
             transmission.Transmission(
                 user_agent_addition='foo/1.0', gzip_enabled=False)
-            expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0"
+            expected = "libhoney-py/" + libhoney.version.VERSION + " foo/1.0" + " python/" + python_version()
             m_session.return_value.headers.update.assert_called_once_with({
                 'User-Agent': expected
             })
