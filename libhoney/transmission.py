@@ -476,9 +476,12 @@ class FileTransmission():
     def __init__(self, user_agent_addition='', output=sys.stderr):
         self._output = output
 
-        self._user_agent = "libhoney-py/" + VERSION
         if user_agent_addition:
-            self._user_agent += " " + user_agent_addition
+            agent_template = "libhoney-py/{} {} python/{}"
+            self._user_agent = agent_template.format(VERSION, user_agent_addition, python_version())
+        else:
+            agent_template = "libhoney-py/{} python/{}"
+            self._user_agent = agent_template.format(VERSION, python_version())
 
     def start(self):
         ''' start is defined to be consistent with the Transmission API but
