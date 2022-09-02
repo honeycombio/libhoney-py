@@ -13,6 +13,7 @@ import time
 import collections
 import concurrent.futures
 
+from platform import python_version
 from libhoney.version import VERSION
 from libhoney.internal import json_default_handler
 
@@ -44,9 +45,12 @@ class Transmission():
         self.gzip_compression_level = gzip_compression_level
         self.gzip_enabled = gzip_enabled
 
-        user_agent = "libhoney-py/" + VERSION
         if user_agent_addition:
-            user_agent += " " + user_agent_addition
+            agent_template = "libhoney-py/{} {} python/{}"
+            user_agent = agent_template.format(VERSION, user_agent_addition, python_version())
+        else:
+            agent_template = "libhoney-py/{} python/{}"
+            user_agent = agent_template.format(VERSION, python_version())
 
         session = self._get_requests_session()
         session.headers.update({"User-Agent": user_agent})
@@ -277,9 +281,12 @@ if has_tornado:
             self.max_batch_size = max_batch_size
             self.send_frequency = send_frequency
 
-            user_agent = "libhoney-py/" + VERSION + " (tornado/{})".format(tornado_version)
             if user_agent_addition:
-                user_agent += " " + user_agent_addition
+                agent_template = "libhoney-py/{} (tornado/{}) {} python/{}"
+                user_agent = agent_template.format(VERSION, tornado_version, user_agent_addition, python_version())
+            else:
+                agent_template = "libhoney-py/{} (tornado/{}) python/{}"
+                user_agent = agent_template.format(VERSION, tornado_version, python_version())
 
             self.http_client = AsyncHTTPClient(
                 force_instance=True,
