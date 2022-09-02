@@ -9,9 +9,6 @@ import json
 import threading
 import statsd
 import sys
-from requests import Session
-from requests.adapters import HTTPAdapter
-from urllib3.util import Retry
 import time
 import collections
 import concurrent.futures
@@ -73,6 +70,11 @@ class Transmission():
 
     @staticmethod
     def _get_requests_session():
+        # lazy load requests only when needed (for why, see #121)
+        from requests import Session  # pylint: disable=import-outside-toplevel
+        from requests.adapters import HTTPAdapter  # pylint: disable=import-outside-toplevel
+        from urllib3.util import Retry  # pylint: disable=import-outside-toplevel
+
         retry_strategy = Retry(total=1,
                                status_forcelist=[500, 503, 504, 408, 429],  # retry status codes
                                allowed_methods=["POST"])  # allow 1 retry on post
