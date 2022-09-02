@@ -1,5 +1,18 @@
 # libhoney-py Changelog
 
+## 2.2.0 2022-09-02
+
+### Improvements
+
+- Add Python version to the user-agent header (#131) | [@emilyashley](https://github.com/emilyashley)
+- Add Tornado version to user-agent header if sent via Tornado. (#128) | [@emilyashley](https://github.com/emilyashley)
+- Retry once on send timeout  (#126) | [@emilyashley](https://github.com/emilyashley)
+
+### Maintenance
+
+- Bump requests-mock from 1.9.3 to 1.10.0 (#132) | [dependabot](https://github.com/dependabot)
+- Bump django from 4.0.6 to 4.0.7 in /examples (#123, #124, #125) | [dependabot](https://github.com/dependabot)
+
 ## 2.1.1 2022-07-13
 
 ### Improvements
