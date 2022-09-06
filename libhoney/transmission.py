@@ -46,7 +46,7 @@ class Transmission():
         self.gzip_enabled = gzip_enabled
 
         if user_agent_addition:
-             user_agent = f"libhoney-py/{VERSION} {user_agent_addition} python/{python_version()}"
+            user_agent = f"libhoney-py/{VERSION} {user_agent_addition} python/{python_version()}"
         else:
             user_agent = f"libhoney-py/{VERSION} python/{python_version()}"
 
@@ -282,7 +282,7 @@ if has_tornado:
             if user_agent_addition:
                 user_agent = f"libhoney-py/{VERSION} (tornado/{tornado_version}) {user_agent_addition} python/{python_version()}"
             else:
-                user_agent =  f"libhoney-py/{VERSION} (tornado/{tornado_version}) python/{python_version()}"
+                user_agent = f"libhoney-py/{VERSION} (tornado/{tornado_version}) python/{python_version()}"
 
             self.http_client = AsyncHTTPClient(
                 force_instance=True,
@@ -474,7 +474,7 @@ class FileTransmission():
         self._output = output
 
         if user_agent_addition:
-             self._user_agent = f"libhoney-py/{VERSION} {user_agent_addition} python/{python_version()}"
+            self._user_agent = f"libhoney-py/{VERSION} {user_agent_addition} python/{python_version()}"
         else:
             self._user_agent = f"libhoney-py/{VERSION} python/{python_version()}"
 
