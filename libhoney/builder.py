@@ -1,4 +1,4 @@
-import libhoney.state as state
+from libhoney import state
 from libhoney.event import Event
 from libhoney.fields import FieldHolder
 

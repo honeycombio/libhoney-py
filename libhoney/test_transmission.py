@@ -1,7 +1,7 @@
 '''Tests for libhoney/transmission.py'''
 
 import libhoney
-import libhoney.transmission as transmission
+from libhoney import transmission
 from libhoney.version import VERSION
 from platform import python_version
 
@@ -57,7 +57,7 @@ class TestTransmissionInit(unittest.TestCase):
 class FakeEvent():
     def __init__(self):
         self.created_at = datetime.datetime.now()
-        self.metadata = dict()
+        self.metadata = {}
 
 
 class TestTransmissionSend(unittest.TestCase):

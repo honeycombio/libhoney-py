@@ -427,6 +427,7 @@ if has_tornado:
                         status, "", None, start, ev.metadata)
                     self.sd.incr("messages_sent")
             except Exception as e:
+                status_code = resp.code
                 self._enqueue_errors(status_code, e, start, events)
                 self.sd.incr("send_errors")
             finally:
