@@ -1,4 +1,10 @@
 # libhoney-py Changelog
+## 2.3.0 2022-09-09
+
+⚠️  Minimum supported Python version is now 3.7 ⚠️ 
+### Maintenance
+
+- Drop Python 3.5, 3.6 Support (#136)| [@emilyashley](https://github.com/emilyashley)
 
 ## 2.2.0 2022-09-02
 
