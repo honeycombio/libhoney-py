@@ -11,6 +11,7 @@
 
 3. Add release entry to [changelog](./CHANGELOG.md)
 4. Open a PR with the above, and merge that into main
-5. Create new tag on merged commit with the new version (e.g. `v2.3.1`)
-6. Push the tag upstream (this will kick off the release pipeline in CI)
+5. Create new tag on merged commit with the new version (e.g. `git tag -a v2.3.1 -m "v2.3.1"`)
+6. Push the tag upstream (this will kick off the release pipeline in CI) e.g. `git push origin v2.3.1`
 7. Copy change log entry for newest version into draft GitHub release created as part of CI publish steps
+  - generate release notes via github release draft for full changelog notes and any new contributors
