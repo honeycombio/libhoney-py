@@ -1,7 +1,7 @@
 '''Tests for libhoney/transmission.py'''
 
 import libhoney
-import libhoney.transmission as transmission
+from libhoney import transmission
 from libhoney.version import VERSION
 from platform import python_version
 
@@ -57,7 +57,7 @@ class TestTransmissionInit(unittest.TestCase):
 class FakeEvent():
     def __init__(self):
         self.created_at = datetime.datetime.now()
-        self.metadata = dict()
+        self.metadata = {}
 
 
 class TestTransmissionSend(unittest.TestCase):
@@ -313,7 +313,7 @@ class TestFileTransmissionSend(unittest.TestCase):
         ev.fields.return_value = {'abc': 1, 'xyz': 2}
         ev.sample_rate = 2.0
         ev.dataset = "exciting-dataset!"
-        ev.user_agent = "libhoney-py/" + VERSION + " test"
+        ev.user_agent = f"libhoney-py/{VERSION} test python/{python_version()}"
         ev.created_at = datetime.datetime.now()
 
         expected_event_time = ev.created_at.isoformat()
@@ -342,7 +342,7 @@ class TestFileTransmissionSend(unittest.TestCase):
         ev.fields.return_value = {'abc': 1, 'xyz': 2, 'dt': dt}
         ev.sample_rate = 2.0
         ev.dataset = "exciting-dataset!"
-        ev.user_agent = "libhoney-py/" + VERSION + " test"
+        ev.user_agent = f"libhoney-py/{VERSION} test python/{python_version()}"
         ev.created_at = datetime.datetime.now()
 
         expected_event_time = ev.created_at.isoformat()

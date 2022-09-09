@@ -17,7 +17,7 @@ import atexit
 import random
 from queue import Queue
 
-import libhoney.state as state
+from libhoney import state
 from libhoney.client import Client
 from libhoney.builder import Builder
 from libhoney.event import Event

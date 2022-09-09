@@ -2,7 +2,7 @@ import datetime
 import random
 from contextlib import contextmanager
 
-import libhoney.state as state
+from libhoney import state
 from libhoney.fields import FieldHolder
 
 

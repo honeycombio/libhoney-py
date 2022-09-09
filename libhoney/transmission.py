@@ -46,11 +46,9 @@ class Transmission():
         self.gzip_enabled = gzip_enabled
 
         if user_agent_addition:
-            agent_template = "libhoney-py/{} {} python/{}"
-            user_agent = agent_template.format(VERSION, user_agent_addition, python_version())
+            user_agent = f"libhoney-py/{VERSION} {user_agent_addition} python/{python_version()}"
         else:
-            agent_template = "libhoney-py/{} python/{}"
-            user_agent = agent_template.format(VERSION, python_version())
+            user_agent = f"libhoney-py/{VERSION} python/{python_version()}"
 
         session = self._get_requests_session()
         session.headers.update({"User-Agent": user_agent})
@@ -282,11 +280,9 @@ if has_tornado:
             self.send_frequency = send_frequency
 
             if user_agent_addition:
-                agent_template = "libhoney-py/{} (tornado/{}) {} python/{}"
-                user_agent = agent_template.format(VERSION, tornado_version, user_agent_addition, python_version())
+                user_agent = f"libhoney-py/{VERSION} (tornado/{tornado_version}) {user_agent_addition} python/{python_version()}"
             else:
-                agent_template = "libhoney-py/{} (tornado/{}) python/{}"
-                user_agent = agent_template.format(VERSION, tornado_version, python_version())
+                user_agent = f"libhoney-py/{VERSION} (tornado/{tornado_version}) python/{python_version()}"
 
             self.http_client = AsyncHTTPClient(
                 force_instance=True,
@@ -427,6 +423,7 @@ if has_tornado:
                         status, "", None, start, ev.metadata)
                     self.sd.incr("messages_sent")
             except Exception as e:
+                status_code = resp.code
                 self._enqueue_errors(status_code, e, start, events)
                 self.sd.incr("send_errors")
             finally:
@@ -476,9 +473,10 @@ class FileTransmission():
     def __init__(self, user_agent_addition='', output=sys.stderr):
         self._output = output
 
-        self._user_agent = "libhoney-py/" + VERSION
         if user_agent_addition:
-            self._user_agent += " " + user_agent_addition
+            self._user_agent = f"libhoney-py/{VERSION} {user_agent_addition} python/{python_version()}"
+        else:
+            self._user_agent = f"libhoney-py/{VERSION} python/{python_version()}"
 
     def start(self):
         ''' start is defined to be consistent with the Transmission API but

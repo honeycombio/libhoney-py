@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 import libhoney
-import libhoney.client as client
+from libhoney import client
 
 
 def sample_dyn_fn():
