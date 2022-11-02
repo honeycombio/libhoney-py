@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "libhoney-flask-example"
+version = "0.1.0"
+description = "Flask app instrumented with libhoney"
+authors = ["Your Name <you@example.com>"]
+packages = [{include = "libhoney-flask-example"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "^2.2.2"
+flask-sqlalchemy = "^3.0.2"
+libhoney = "^2.3.0"
+mysqlclient = "^2.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
