@@ -6,7 +6,7 @@ orbs:
 executors:
   python:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
   github:
     docker:
       - image: cibuilds/github:0.13.0
