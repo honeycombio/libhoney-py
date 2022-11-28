@@ -1,12 +1,12 @@
 version: 2.1
 
 orbs:
-  buildevents: honeycombio/buildevents@0.2.6
+  buildevents: honeycombio/buildevents@0.9.0
 
 executors:
   python:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
   github:
     docker:
       - image: cibuilds/github:0.13.0
@@ -144,12 +144,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - watch:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - setup_trace
       - test:
           matrix:
             parameters:
@@ -172,17 +166,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - watch:
-          context: Honeycomb Secrets for Public Repos
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore:
-              - /pull\/.*/
-              - /dependabot\/.*/
-          requires:
-            - setup_trace
       - test:
           matrix:
             parameters:
