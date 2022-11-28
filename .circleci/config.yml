@@ -144,12 +144,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - watch:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - setup_trace
       - test:
           matrix:
             parameters:
@@ -172,16 +166,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - watch:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore:
-              - /pull\/.*/
-              - /dependabot\/.*/
-          requires:
-            - setup_trace
       - test:
           matrix:
             parameters:
