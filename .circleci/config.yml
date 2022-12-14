@@ -17,7 +17,7 @@ commands:
       - checkout
       - buildevents/berun:
           bename: poetry_install
-          becommand: poetry install --no-root
+          becommand: poetry install --no-root --no-ansi
   run_lint:
     steps:
       - buildevents/berun:
