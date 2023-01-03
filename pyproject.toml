@@ -20,7 +20,7 @@ pylint = [{version = "^2.13", python = ">=3.7,<4"}]
 pycodestyle = "^2.6.0"
 requests-mock = "^1.10.0"
 tornado = "^6.2"
-autopep8 = "^1.5.3"
+autopep8 = "^2.0.0"
 bump2version = "^1.0.1"
 httpretty = "^1.1.4"
 
