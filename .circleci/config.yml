@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  buildevents: honeycombio/buildevents@0.9.0
-
 executors:
   python:
     docker:
@@ -15,30 +12,30 @@ commands:
   setup:
     steps:
       - checkout
-      - buildevents/berun:
-          bename: poetry_install
-          becommand: poetry install --no-root --no-ansi
+      - run:
+          name: poetry_install
+          command: poetry install --no-root --no-ansi
   run_lint:
     steps:
-      - buildevents/berun:
-          bename: run_lint
-          becommand: poetry run pylint --rcfile=pylint.rc libhoney
-      - buildevents/berun:
-          bename: run_pycodestyle
-          becommand: poetry run pycodestyle libhoney --max-line-length=140
+      - run:
+          name: run_lint
+          command: poetry run pylint --rcfile=pylint.rc libhoney
+      - run:
+          name: run_pycodestyle
+          command: poetry run pycodestyle libhoney --max-line-length=140
   run_tests:
     steps:
-      - buildevents/berun:
-          bename: run_tests
-          becommand: poetry run coverage run -m unittest discover -v
+      - run:
+          name: run_tests
+          command: poetry run coverage run -m unittest discover -v
   run_coverage:
     steps:
-      - buildevents/berun:
-          bename: coverage_report
-          becommand: poetry run coverage report --include="libhoney/*"
-      - buildevents/berun:
-          bename: coverage_html
-          becommand: poetry run coverage html --include="libhoney/*"
+      - run:
+          name: coverage_report
+          command: poetry run coverage report --include="libhoney/*"
+      - run:
+          name: coverage_html
+          command: poetry run coverage html --include="libhoney/*"
 
   runtests:
     steps:
@@ -52,12 +49,12 @@ commands:
     steps:
       - setup
       - run: mkdir -p ~/artifacts
-      - buildevents/berun:
-          bename: poetry_build
-          becommand: poetry build
-      - buildevents/berun:
-          bename: copy_binaries
-          becommand: cp dist/* ~/artifacts
+      - run:
+          name: poetry_build
+          command: poetry build
+      - run:
+          name: copy_binaries
+          command: cp dist/* ~/artifacts
       - persist_to_workspace:
           root: ~/
           paths:
@@ -74,16 +71,16 @@ commands:
           command: |
             echo "about to publish to tag ${CIRCLE_TAG}"
             ls -l ~/artifacts/*
-      - buildevents/berun:
-          bename: ghr_draft
-          becommand: ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ~/artifacts
+      - run:
+          name: ghr_draft
+          command: ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ~/artifacts
 
   publish_pypi:
     steps:
       - setup
-      - buildevents/berun:
-          bename: poetry_publish
-          becommand: poetry publish --build -u honeycomb -p ${PYPI_PASSWORD}
+      - run:
+          name: poetry_publish
+          command: poetry publish --build -u honeycomb -p ${PYPI_PASSWORD}
 
 # required as all of the jobs need to have a tag filter for some reason
 tag_filters: &tag_filters
@@ -92,14 +89,6 @@ tag_filters: &tag_filters
       only: /.*/
 
 jobs:
-  setup_trace:
-    executor: python
-    steps:
-      - buildevents/start_trace
-  watch:
-    executor: python
-    steps:
-      - buildevents/watch_build_and_finish
   test:
     parameters:
       python-version:
@@ -107,27 +96,19 @@ jobs:
     docker:
       - image: cimg/python:<<parameters.python-version>>
     steps:
-      - buildevents/with_job_span:
-          steps:
-            - runtests
+      - runtests
   build:
     executor: python
     steps:
-      - buildevents/with_job_span:
-          steps:
-            - build
+      - build
   publish_github:
     executor: github
     steps:
-      - buildevents/with_job_span:
-          steps:
-            - publish_github
+      - publish_github
   publish_pypi:
     executor: python
     steps:
-      - buildevents/with_job_span:
-          steps:
-            - publish_pypi
+      - publish_pypi
 
 workflows:
   version: 2
@@ -140,10 +121,6 @@ workflows:
               only:
                 - main
     jobs:
-      - setup_trace:
-          filters:
-            tags:
-              only: /.*/
       - test:
           matrix:
             parameters:
@@ -151,8 +128,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-          requires:
-            - setup_trace
       - build:
           filters:
             tags:
@@ -162,10 +137,6 @@ workflows:
 
   build_libhoney:
     jobs:
-      - setup_trace:
-          filters:
-            tags:
-              only: /.*/
       - test:
           matrix:
             parameters:
@@ -173,8 +144,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-          requires:
-            - setup_trace
       - build:
           filters:
             tags:
