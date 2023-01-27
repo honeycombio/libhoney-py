@@ -68,7 +68,7 @@ commands:
       - attach_workspace:
           at: ./
       - run:
-          name: Placeholder - Spin up example in Docker
+          name: Spin up example in Docker
           command: make smoke
       - run:
           name: Spin down example
