@@ -4,9 +4,9 @@ import datetime
 import libhoney
 import threading
 
-writekey = os.environ["HONEYCOMB_API_KEY"]
-dataset = "factorial"
-
+writekey=os.environ.get("HONEYCOMB_API_KEY")
+dataset=os.environ.get("HONEYCOMB_DATASET", "factorial")
+api_host=os.environ.get("HONEYCOMB_API_ENDPOINT", "https://api.honeycomb.io")
 
 def factorial(n):
     if n < 0:
@@ -49,7 +49,10 @@ def read_responses(resp_queue):
 
 
 if __name__ == "__main__":
-    hc = libhoney.Client(writekey=writekey, dataset=dataset, max_concurrent_batches=1)
+    hc = libhoney.Client(writekey=writekey,
+                        dataset=dataset,
+                        api_host=api_host,
+                        max_concurrent_batches=1)
     resps = hc.responses()
     t = threading.Thread(target=read_responses, args=(resps,))
 

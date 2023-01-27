@@ -62,6 +62,18 @@ commands:
       - store_artifacts:
           path: ~/artifacts
 
+  makesmoke:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Spin up example in Docker
+          command: make smoke
+      - run:
+          name: Spin down example
+          command: make unsmoke
+
   publish_github:
     steps:
       - attach_workspace:
@@ -101,6 +113,12 @@ jobs:
     executor: python
     steps:
       - build
+  smoke_test:
+    machine:
+      image: ubuntu-2004:202107-02
+    steps:
+      - makesmoke
+
   publish_github:
     executor: github
     steps:
@@ -150,6 +168,12 @@ workflows:
               only: /.*/
           requires:
             - test
+      - smoke_test:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build
       - publish_github:
           context: Honeycomb Secrets for Public Repos
           requires:
