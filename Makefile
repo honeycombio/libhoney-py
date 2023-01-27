@@ -21,7 +21,7 @@ smoke:
 	@echo ""
 	@echo "+++ Running example app in docker"
 	@echo ""
-	docker-compose up --build
+	docker-compose up --build --exit-code-from factorial-example
 
 unsmoke:
 	@echo ""
