@@ -7,7 +7,7 @@ packages = [{include = "libhoney-flask-example"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Flask = "^2.2.2"
+Flask = "^2.3.2"
 flask-sqlalchemy = "^3.0.2"
 libhoney = "^2.3.0"
 mysqlclient = "^2.1.1"
