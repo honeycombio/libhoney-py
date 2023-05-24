@@ -7,7 +7,7 @@ license = "n"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-requests = "^2.24.0"
+requests = "^2.31.0"
 statsd = "^3.3.0"
 tornado = [{version = "^6.0.4", python = ">=3.5"}]
 libhoney = {path = "../..", develop = true}
