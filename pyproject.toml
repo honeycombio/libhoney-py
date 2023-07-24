@@ -12,7 +12,7 @@ repository = "https://github.com/honeycombio/libhoney-py"
 python = ">=3.7, <4"
 requests = "^2.24.0"
 statsd = ">=3.3,<5.0"
-urllib3 = "^1.26"
+urllib3 = ">=1.26,<3.0"
 
 [tool.poetry.dev-dependencies]
 coverage = "^7.2.7"
