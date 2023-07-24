@@ -18,7 +18,7 @@ urllib3 = ">=1.26,<3.0"
 coverage = "^7.2.7"
 pylint = [{version = "^2.13", python = ">=3.7,<4"}]
 pycodestyle = "^2.10.0"
-requests-mock = "^1.10.0"
+requests-mock = "^1.11.0"
 tornado = "^6.2"
 autopep8 = "^2.0.2"
 bump2version = "^1.0.1"
