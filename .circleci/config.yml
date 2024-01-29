@@ -92,7 +92,7 @@ commands:
       - setup
       - run:
           name: poetry_publish
-          command: poetry publish --build -u honeycomb -p ${PYPI_PASSWORD}
+          command: poetry publish --build -u '__token__' -p ${PYPI_TOKEN}
 
 # required as all of the jobs need to have a tag filter for some reason
 tag_filters: &tag_filters
