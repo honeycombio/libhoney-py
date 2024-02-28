@@ -86,7 +86,7 @@ class Client(object):
             self._init_logger()
 
         def IsClassicKey(key):
-            return (len(key) == 32 or key == "" or re.match(r'^hc[a-z]ic_[a-z0-9]{58}$', key))
+            return (key == "" or re.match(r'^[a-f0-9]{32}$', key) or re.match(r'^hc[a-z]ic_[a-z0-9]{58}$', key))
 
         self.log('initialized honeycomb client: writekey=%s dataset=%s',
                  writekey, dataset)
