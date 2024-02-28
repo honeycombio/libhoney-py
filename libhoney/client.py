@@ -1,4 +1,5 @@
 import logging
+import re
 import queue
 
 from libhoney.event import Event
@@ -85,7 +86,7 @@ class Client(object):
             self._init_logger()
 
         def IsClassicKey(key):
-            return (len(key) == 32 or key == "")
+            return (len(key) == 32 or key == "" or re.match(r'^hc[a-z]ic_[a-z0-9]{58}$', key))
 
         self.log('initialized honeycomb client: writekey=%s dataset=%s',
                  writekey, dataset)

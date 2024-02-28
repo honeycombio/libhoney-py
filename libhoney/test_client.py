@@ -45,6 +45,16 @@ class TestClient(unittest.TestCase):
         self.assertEqual(c.writekey, "")
         self.assertEqual(c.dataset, "")
 
+    def test_init_treats_classic_ingest_key_as_classic_key(self):
+        c = client.Client(writekey="hcxic_1234567890123456789012345678901234567890123456789012345678", dataset="")
+        self.assertEqual(c.writekey, "hcxic_1234567890123456789012345678901234567890123456789012345678")
+        self.assertEqual(c.dataset, "")
+
+    def test_init_treats_ingest_key_as_non_classic_key(self):
+        c = client.Client(writekey="hcxik_1234567890123456789012345678901234567890123456789012345678", dataset="")
+        self.assertEqual(c.writekey, "hcxik_1234567890123456789012345678901234567890123456789012345678")
+        self.assertEqual(c.dataset, "unknown_dataset")
+
     def test_init_sets_default_dataset_with_non_classic_key(self):
         c = client.Client(writekey="shinynewenvironmentkey", dataset="")
         self.assertEqual(c.writekey, "shinynewenvironmentkey")
