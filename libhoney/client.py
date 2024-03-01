@@ -11,7 +11,7 @@ from libhoney.transmission import Transmission
 def IsClassicKey(key):
     '''Returns true if the API key is a Classic key or a Classic Ingest Key'''
     return (key == "" or re.match(r'^[a-f0-9]{32}$', key)
-                or re.match(r'^hc[a-z]ic_[a-z0-9]{58}$', key))
+            or re.match(r'^hc[a-z]ic_[a-z0-9]{58}$', key))
 
 
 class Client(object):
