@@ -18,7 +18,7 @@ import random
 from queue import Queue
 
 from libhoney import state
-from libhoney.client import Client
+from libhoney.client import Client, IsClassicKey
 from libhoney.builder import Builder
 from libhoney.event import Event
 from libhoney.fields import FieldHolder
@@ -196,7 +196,7 @@ atexit.register(close)  # safe because it's a no-op unless init() was called
 
 # export everything
 __all__ = [
-    "Builder", "Event", "Client", "FieldHolder",
+    "Builder", "Event", "Client", "IsClassicKey", "FieldHolder",
     "SendError", "add", "add_dynamic_field",
     "add_field", "close", "init", "responses", "send_now",
 ]
