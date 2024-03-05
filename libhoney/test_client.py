@@ -11,6 +11,7 @@ from libhoney.client import IsClassicKey
 def sample_dyn_fn():
     return "dyna", "magic"
 
+
 class TestClient(unittest.TestCase):
     def setUp(self):
         libhoney.close()
@@ -216,8 +217,8 @@ class TestClient(unittest.TestCase):
         self.assertEqual(IsClassicKey("c1a551c1111111111111111111111111"), True)
 
     def test_is_classic_with_classic_ingest_key(self):
-         self.assertEqual(IsClassicKey("hcxic_1234567890123456789012345678901234567890123456789012345678"), True)
-         
+        self.assertEqual(IsClassicKey("hcxic_1234567890123456789012345678901234567890123456789012345678"), True)
+
     def test_is_classic_with_configuration_key(self):
         self.assertEqual(IsClassicKey("shinynewenvironmentkey"), False)
 
