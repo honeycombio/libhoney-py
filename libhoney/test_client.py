@@ -5,11 +5,11 @@ from unittest import mock
 
 import libhoney
 from libhoney import client
+from libhoney.client import IsClassicKey
 
 
 def sample_dyn_fn():
     return "dyna", "magic"
-
 
 class TestClient(unittest.TestCase):
     def setUp(self):
@@ -208,6 +208,21 @@ class TestClient(unittest.TestCase):
         mock_xmit = mock.Mock()
         with client.Client(transmission_impl=mock_xmit) as c:
             self.assertEqual(c.xmit, mock_xmit)
+
+    def test_empty_key(self):
+        self.assertEqual(IsClassicKey(""), True)
+
+    def test_configuration_key(self):
+        self.assertEqual(IsClassicKey("shinynewenvironmentkey"), False)
+
+    def test_ingest_key(self):
+        self.assertEqual(IsClassicKey("hcxik_1234567890123456789012345678901234567890123456789012345678"), False)
+
+    def test_classic_configuration_key(self):
+        self.assertEqual(IsClassicKey("c1a551c1111111111111111111111111"), True)
+
+    def test_classic_ingest_key(self):
+         self.assertEqual(IsClassicKey("hcxic_1234567890123456789012345678901234567890123456789012345678"), True)
 
 
 class TestClientFlush(unittest.TestCase):
