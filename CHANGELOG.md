@@ -1,4 +1,77 @@
 # libhoney-py Changelog
+
+## 2.4.0 2024-03-06
+
+### Improvements
+
+- feat: support classic-flavored ingest keys (#231) | [@jharley](https://github.com/jharley)
+
+### Maintenance
+
+- maint: Update poetry publish to use API token (#230) | [Mike Goldsmith](https://github.com/MikeGoldsmith)
+- maint: update codeowners to pipeline-team (#229) | [Jamie Danielson](https://github.com/JamieDanielson)
+- maint: update codeowners to pipeline (#228) | [Jamie Danielson](https://github.com/JamieDanielson)
+- build(deps): bump certifi from 2022.12.7 to 2023.7.22 in /examples/flask (#207) | [dependabot[bot]](https://github.com/dependabot)
+- build(deps): bump certifi from 2022.12.7 to 2023.7.22 in /examples/factorial (#206) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps-dev): bump requests-mock from 1.10.0 to 1.11.0 (#200) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps-dev): bump autopep8 from 1.7.0 to 2.0.2 (#178) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps): bump urllib3 from 1.26.13 to 2.0.4 (#205) | [dependabot[bot]](https://github.com/dependabot)
+- maint: Bump statsd from 3.3.0 to 4.0.1 (#153) | [dependabot[bot]](https://github.com/dependabot)
+- build(deps): bump django from 4.1.9 to 4.1.10 in /examples/django_simple (#202) | [dependabot[bot]](https://github.com/dependabot)
+- build(deps): bump django from 4.1.9 to 4.1.10 in /examples/django_dynamic_fields (#203) | [dependabot[bot]](https://github.com/dependabot)
+- build(deps): bump django from 4.1.9 to 4.1.10 in /examples/django_response_time (#204) | [dependabot[bot]](https://github.com/dependabot)
+- docs: add development.md (#199) | [Vera Reynolds](https://github.com/vreynolds)
+- maint(deps-dev): bump coverage from 7.2.5 to 7.2.7 (#197) | [dependabot[bot]](https://github.com/dependabot)
+- Bump requests from 2.28.1 to 2.31.0 in /examples/django_dynamic_fields (#191) | [dependabot[bot]](https://github.com/dependabot)
+- Bump requests from 2.28.1 to 2.31.0 in /examples/django_simple (#192) | [dependabot[bot]](https://github.com/dependabot)
+- Bump requests from 2.28.1 to 2.31.0 in /examples/django_response_time (#193) | [dependabot[bot]](https://github.com/dependabot)
+- Bump requests from 2.28.1 to 2.31.0 in /examples/factorial (#194) | [dependabot[bot]](https://github.com/dependabot)
+- Bump requests from 2.28.1 to 2.31.0 in /examples/flask (#195) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps): bump requests from 2.30.0 to 2.31.0 (#196) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps): bump requests from 2.28.2 to 2.30.0 (#190) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps-dev): bump coverage from 7.2.2 to 7.2.5 (#184) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.7 to 4.1.9 in /examples/django_response_time (#187) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.7 to 4.1.9 in /examples/django_dynamic_fields (#189) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.7 to 4.1.9 in /examples/django_simple (#188) | [dependabot[bot]](https://github.com/dependabot)
+- Bump flask from 2.2.2 to 2.3.2 in /examples/flask (#186) | [dependabot[bot]](https://github.com/dependabot)
+- Bump sqlparse from 0.4.2 to 0.4.4 in /examples/django_dynamic_fields (#182) | [dependabot[bot]](https://github.com/dependabot)
+- Bump sqlparse from 0.4.2 to 0.4.4 in /examples/django_response_time (#181) | [dependabot[bot]](https://github.com/dependabot)
+- Bump sqlparse from 0.4.2 to 0.4.4 in /examples/django_simple (#180) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps): bump requests from 2.28.1 to 2.28.2 (#168) | [dependabot[bot]](https://github.com/dependabot)
+- maint(deps-dev): bump coverage from 6.4.4 to 7.2.2 (#179) | [dependabot[bot]](https://github.com/dependabot)
+- Bump werkzeug from 2.2.2 to 2.2.3 in /examples/flask (#176) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.6 to 4.1.7 in /examples/django_simple (#175) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.6 to 4.1.7 in /examples/django_dynamic_fields (#174) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.6 to 4.1.7 in /examples/django_response_time (#173) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.2 to 4.1.6 in /examples/django_response_time (#172) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.2 to 4.1.6 in /examples/django_simple (#171) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1.2 to 4.1.6 in /examples/django_dynamic_fields (#170) | [dependabot[bot]](https://github.com/dependabot)
+- maint: dockerize example and run in ci (#167) | [Jamie Danielson](https://github.com/JamieDanielson)
+- maint: remove buildevents from circle (#166) | [Jamie Danielson](https://github.com/JamieDanielson)
+- maint: Bump pycodestyle from 2.9.1 to 2.10.0 (#154) | [dependabot[bot]](https://github.com/dependabot)
+- maint: Bump urllib3 from 1.26.12 to 1.26.13 (#155) | [dependabot[bot]](https://github.com/dependabot)
+- Bump certifi from 2022.6.15.1 to 2022.12.7 (#160) | [dependabot[bot]](https://github.com/dependabot)
+- fix: update dependabot tiltes to semantic commit format (#164) | [Purvi Kanal](https://github.com/pkanal)
+- maint: fix build (#162) | [Vera Reynolds](https://github.com/vreynolds)
+- Bump certifi from 2022.6.15 to 2022.12.7 in /examples/django_dynamic_fields (#158) | [dependabot[bot]](https://github.com/dependabot)
+- Bump certifi from 2022.6.15 to 2022.12.7 in /examples/django_response_time (#157) | [dependabot[bot]](https://github.com/dependabot)
+- Bump certifi from 2022.6.15 to 2022.12.7 in /examples/django_simple (#156) | [dependabot[bot]](https://github.com/dependabot)
+- Bump certifi from 2022.6.15 to 2022.12.7 in /examples/factorial (#159) | [dependabot[bot]](https://github.com/dependabot)
+- Bump certifi from 2022.9.24 to 2022.12.7 in /examples/flask (#161) | [dependabot[bot]](https://github.com/dependabot)
+- ci: update validate PR title workflow (#152) | [Purvi Kanal](https://github.com/pkanal)
+- maint: update buildevents orb and python convenience image (#150) | [Jamie Danielson](https://github.com/JamieDanielson)
+- ci: validate PR title (#151) | [Purvi Kanal](https://github.com/pkanal)
+- maint: add flask example (#148) | [Vera Reynolds](https://github.com/vreynolds)
+- maint: delete workflows for old board (#144) | [Vera Reynolds](https://github.com/vreynolds)
+- Bump django from 4.1 to 4.1.2 in /examples/django_simple (#146) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1 to 4.1.2 in /examples/django_response_time (#147) | [dependabot[bot]](https://github.com/dependabot)
+- Bump django from 4.1 to 4.1.2 in /examples/django_dynamic_fields (#145) | [dependabot[bot]](https://github.com/dependabot)
+- Be more specific on required versions of urllib3 #141 (#142) | [Emily Ashley](https://github.com/emilyashley)
+- maint: add release file (#143) | [Vera Reynolds](https://github.com/vreynolds)
+- maint: add new project workflow (#140) | [Vera Reynolds](https://github.com/vreynolds)
+- update releasing notes (#138) | [Emily Ashley](https://github.com/emilyashley)
+
+
 ## 2.3.0 2022-09-09
 
 ⚠️  Minimum supported Python version is now 3.7 ⚠️ 
