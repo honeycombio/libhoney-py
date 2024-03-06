@@ -71,7 +71,6 @@
 - maint: add new project workflow (#140) | [Vera Reynolds](https://github.com/vreynolds)
 - update releasing notes (#138) | [Emily Ashley](https://github.com/emilyashley)
 
-
 ## 2.3.0 2022-09-09
 
 ⚠️  Minimum supported Python version is now 3.7 ⚠️ 
