@@ -5,6 +5,7 @@ from unittest import mock
 
 import libhoney
 from libhoney import client
+from libhoney.client import IsClassicKey
 
 
 def sample_dyn_fn():
@@ -44,6 +45,16 @@ class TestClient(unittest.TestCase):
         c = client.Client(writekey="", dataset="")
         self.assertEqual(c.writekey, "")
         self.assertEqual(c.dataset, "")
+
+    def test_init_treats_classic_ingest_key_as_classic_key(self):
+        c = client.Client(writekey="hcxic_1234567890123456789012345678901234567890123456789012345678", dataset="")
+        self.assertEqual(c.writekey, "hcxic_1234567890123456789012345678901234567890123456789012345678")
+        self.assertEqual(c.dataset, "")
+
+    def test_init_treats_ingest_key_as_non_classic_key(self):
+        c = client.Client(writekey="hcxik_1234567890123456789012345678901234567890123456789012345678", dataset="")
+        self.assertEqual(c.writekey, "hcxik_1234567890123456789012345678901234567890123456789012345678")
+        self.assertEqual(c.dataset, "unknown_dataset")
 
     def test_init_sets_default_dataset_with_non_classic_key(self):
         c = client.Client(writekey="shinynewenvironmentkey", dataset="")
@@ -198,6 +209,21 @@ class TestClient(unittest.TestCase):
         mock_xmit = mock.Mock()
         with client.Client(transmission_impl=mock_xmit) as c:
             self.assertEqual(c.xmit, mock_xmit)
+
+    def test_is_classic_with_empty_key(self):
+        self.assertEqual(IsClassicKey(""), True)
+
+    def test_is_classic_with_classic_configuration_key(self):
+        self.assertEqual(IsClassicKey("c1a551c1111111111111111111111111"), True)
+
+    def test_is_classic_with_classic_ingest_key(self):
+        self.assertEqual(IsClassicKey("hcxic_1234567890123456789012345678901234567890123456789012345678"), True)
+
+    def test_is_classic_with_configuration_key(self):
+        self.assertEqual(IsClassicKey("shinynewenvironmentkey"), False)
+
+    def test_is_classic_with_ingest_key(self):
+        self.assertEqual(IsClassicKey("hcxik_1234567890123456789012345678901234567890123456789012345678"), False)
 
 
 class TestClientFlush(unittest.TestCase):

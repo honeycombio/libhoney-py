@@ -1,10 +1,22 @@
 import logging
+import re
 import queue
 
 from libhoney.event import Event
 from libhoney.builder import Builder
 from libhoney.fields import FieldHolder
 from libhoney.transmission import Transmission
+
+
+def IsClassicKey(key):
+    '''Returns true if the API key is a Classic key or a Classic Ingest Key'''
+    if not key:
+        return True
+    if re.match(r'^[a-f0-9]{32}$', key):
+        return True
+    if re.match(r'^hc[a-z]ic_[a-z0-9]{58}$', key):
+        return True
+    return False
 
 
 class Client(object):
@@ -83,9 +95,6 @@ class Client(object):
         self.debug = debug
         if debug:
             self._init_logger()
-
-        def IsClassicKey(key):
-            return (len(key) == 32 or key == "")
 
         self.log('initialized honeycomb client: writekey=%s dataset=%s',
                  writekey, dataset)
