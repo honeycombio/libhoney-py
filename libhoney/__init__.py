@@ -48,6 +48,7 @@ def init(writekey="", dataset="", sample_rate=1,
             write key at [https://ui.honeycomb.io/account](https://ui.honeycomb.io/account)
     - `dataset`: the name of the default dataset to which to write
     - `sample_rate`: the default sample rate. 1 / `sample_rate` events will be sent.
+    - `api_host`: the protocol and Honeycomb api endpoint to send to; defaults to `https://api.honeycomb.io`.
     - `max_concurrent_batches`: the maximum number of concurrent threads sending events.
     - `max_batch_size`: the maximum number of events to batch before sendinga.
     - `send_frequency`: how long to wait before sending a batch of events, in seconds.
