@@ -166,6 +166,24 @@ class Transmission():
         for dest, group in group_events_by_destination(events).items():
             self._send_batch(dest, group)
 
+
+    def send_mark(self, mark):
+        dest = destination(mark.writekey, mark.dataset, mark.api_host)
+        try:
+            url = urljoin(urljoin(dest.api_host, "/1/markers/"),
+                          dest.dataset)
+            payload = mark.fields()
+            resp = self.session.post(
+                url,
+                headers={"X-Honeycomb-Team": dest.writekey,
+                         "Content-Type": "application/json"},
+                data=json.dumps(payload),
+                timeout=10.0,
+            )
+            resp.raise_for_status()
+        except Exception as e:
+            print('Exception in send_mark:', e)
+
     def _send_batch(self, destination, events):
         ''' Makes a single batch API request with the given list of events. The
         `destination` argument contains the write key, API host and dataset

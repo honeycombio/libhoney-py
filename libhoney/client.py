@@ -3,6 +3,7 @@ import re
 import queue
 
 from libhoney.event import Event
+from libhoney.marker import Marker
 from libhoney.builder import Builder
 from libhoney.fields import FieldHolder
 from libhoney.transmission import Transmission
@@ -80,6 +81,10 @@ class Client(object):
             self.xmit = Transmission(
                 max_concurrent_batches=max_concurrent_batches, block_on_send=block_on_send, block_on_response=block_on_response,
                 user_agent_addition=user_agent_addition, debug=debug,
+            )
+            self.xmit_no_gzip = Transmission(
+                max_concurrent_batches=max_concurrent_batches, block_on_send=block_on_send, block_on_response=block_on_response,
+                user_agent_addition=user_agent_addition, debug=debug, gzip_enabled=False
             )
 
         self.xmit.start()
@@ -188,6 +193,12 @@ class Client(object):
         self.log("send enqueuing event ev = %s", event.fields())
         self.xmit.send(event)
 
+    def create_mark(self, data={}):
+        '''Return a Marker, initialized to be sent with this client'''
+        mark = Marker(data=data)
+        self.xmit_no_gzip.send_mark(mark)
+
+
     def send_now(self, data):
         '''
         DEPRECATED - This will likely be removed in a future major version.
@@ -205,6 +216,7 @@ class Client(object):
         ev.add(data)
         self.log("send_now enqueuing event ev = %s", ev.fields())
         ev.send()
+
 
     def send_dropped_response(self, event):
         '''push the dropped event down the responses queue'''

@@ -121,6 +121,13 @@ def add_field(name, val):
         return
     state.G_CLIENT.add_field(name, val)
 
+def create_mark(data: dict):
+    '''Add a field to the global client. This field will be sent with every event.'''
+    if state.G_CLIENT is None:
+        state.warn_uninitialized()
+        return
+    state.G_CLIENT.create_mark(data)
+
 
 def add_dynamic_field(fn):
     '''Add a dynamic field to the global client. This function will be executed every time an
