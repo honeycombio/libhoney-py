@@ -44,3 +44,19 @@ class Marker:
         resp_json = resp.json()
         print(f'{resp_json=}')
         return resp
+
+    def delete(self, marker_id: str):
+        url = urljoin(self.api_host, f"/1/markers/{self.dataset}/{marker_id}")
+        print(url)
+        resp = requests.delete(url,
+                             headers={"X-Honeycomb-Team": self.writekey,
+                                      "Content-Type": "application/json"},
+                             timeout=10.0,
+                             )
+
+        resp.raise_for_status()
+        print('Request successful!\n')
+        resp_json = resp.json()
+        print(f'{resp_json=}')
+        return resp
+
