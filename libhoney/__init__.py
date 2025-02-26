@@ -23,6 +23,7 @@ from libhoney.builder import Builder
 from libhoney.event import Event
 from libhoney.fields import FieldHolder
 from libhoney.errors import SendError
+from libhoney.marker import Marker
 
 random.seed()
 
@@ -147,6 +148,11 @@ def new_event(data={}):
     '''
     return Event(data=data, client=state.G_CLIENT)
 
+def new_marker(data={}):
+    ''' Creates a new marker with the global client. If libhoney has not been
+    initialized, sending this marker will be a no-op.
+    '''
+    return Marker(data=data, client=state.G_CLIENT)
 
 def send_now(data):
     '''
