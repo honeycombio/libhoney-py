@@ -79,6 +79,7 @@ class Client(object):
         if self.xmit is None:
             self.xmit = Transmission(
                 max_concurrent_batches=max_concurrent_batches, block_on_send=block_on_send, block_on_response=block_on_response,
+                max_batch_size=max_batch_size, send_frequency=send_frequency,
                 user_agent_addition=user_agent_addition, debug=debug,
             )
 
