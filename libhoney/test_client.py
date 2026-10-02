@@ -1,11 +1,14 @@
 '''Tests for libhoney/client.py'''
 
+import io
+import json
 import unittest
 from unittest import mock
 
 import libhoney
 from libhoney import client
 from libhoney.client import IsClassicKey
+from libhoney.transmission import FileTransmission
 
 
 def sample_dyn_fn():
@@ -31,6 +34,26 @@ class TestClient(unittest.TestCase):
         self.assertEqual(c.api_host, "blup")
         self.assertEqual(c.sample_rate, 2)
         self.assertEqual(c.xmit, self.tx)
+
+    def test_file_transmission_sampling_without_response_queue(self):
+        for block_on_response in (False, True):
+            with self.subTest(block_on_response=block_on_response):
+                output = io.StringIO()
+                with client.Client(
+                    writekey="foo", dataset="bar", sample_rate=2,
+                    block_on_response=block_on_response,
+                    transmission_impl=FileTransmission(output=output),
+                ) as c:
+                    event = c.new_event()
+                    event.add_field("message", "hello")
+                    with mock.patch('libhoney.event.random.randint', return_value=2):
+                        event.send()
+                    self.assertEqual(output.getvalue(), "")
+                    with mock.patch('libhoney.event.random.randint', return_value=1):
+                        event.send()
+                    payload = json.loads(output.getvalue())
+                    self.assertEqual(payload['data'], {"message": "hello"})
+                    self.assertEqual(payload['samplerate'], 2)
 
     def test_init_sets_no_default_key_if_missing(self):
         c = client.Client(writekey="", dataset="test")
