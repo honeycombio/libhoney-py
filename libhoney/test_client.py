@@ -12,6 +12,21 @@ def sample_dyn_fn():
     return "dyna", "magic"
 
 
+class TestBatchSettings(unittest.TestCase):
+    def test_client_batch_settings(self):
+        with client.Client(max_batch_size=7, send_frequency=0.01) as c:
+            self.assertEqual(c.xmit.max_batch_size, 7)
+            self.assertEqual(c.xmit.send_frequency, 0.01)
+
+    def test_global_batch_settings(self):
+        try:
+            libhoney.init(max_batch_size=13, send_frequency=0.02)
+            self.assertEqual(libhoney.state.G_CLIENT.xmit.max_batch_size, 13)
+            self.assertEqual(libhoney.state.G_CLIENT.xmit.send_frequency, 0.02)
+        finally:
+            libhoney.close()
+
+
 class TestClient(unittest.TestCase):
     def setUp(self):
         libhoney.close()
