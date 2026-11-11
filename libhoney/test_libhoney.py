@@ -48,6 +48,7 @@ class TestGlobalScope(unittest.TestCase):
             m_xmit.assert_called_with(
                 block_on_response=True, block_on_send=False,
                 max_concurrent_batches=5, user_agent_addition='',
+                max_batch_size=100, send_frequency=0.25,
                 debug=False,
             )
 
