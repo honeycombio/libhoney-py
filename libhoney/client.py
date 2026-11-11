@@ -208,6 +208,8 @@ class Client(object):
 
     def send_dropped_response(self, event):
         '''push the dropped event down the responses queue'''
+        if self._responses is None:
+            return
         response = {
             "status_code": 0,
             "duration": 0,
