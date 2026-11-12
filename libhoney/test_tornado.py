@@ -1,9 +1,12 @@
 '''Tests for libhoney/transmission.py'''
 import datetime
+import io
 import unittest
 from unittest import mock
 
 import tornado
+import tornado.testing
+import tornado.web
 
 import libhoney
 from libhoney import transmission
@@ -43,9 +46,13 @@ class TestTornadoTransmissionSend(unittest.TestCase):
     def test_send(self):
         with mock.patch('libhoney.transmission.AsyncHTTPClient.fetch') as fetch_mock,\
                 mock.patch('statsd.StatsClient') as m_statsd:
-            future = tornado.concurrent.Future()
-            future.set_result("OK")
-            fetch_mock.return_value = future
+            def fetch(request, **_kwargs):
+                future = tornado.concurrent.Future()
+                future.set_result(tornado.httpclient.HTTPResponse(
+                    request, 200, buffer=io.BytesIO(b'[{"status": 202}]')))
+                return future
+
+            fetch_mock.side_effect = fetch
             m_statsd.return_value = mock.Mock()
 
             @tornado.gen.coroutine
@@ -59,15 +66,13 @@ class TestTornadoTransmissionSend(unittest.TestCase):
                 ev.fields.return_value = {"foo": "bar"}
                 t.send(ev)
 
-                # wait on the batch to be "sent"
-                # we can detect this when data has been inserted into the
-                # batch data dictionary
-                start_time = datetime.datetime.now()
-                while not t.batch_data:
-                    if datetime.datetime.now() - start_time > datetime.timedelta(0, 10):
-                        self.fail("timed out waiting on batch send")
-                    yield tornado.gen.sleep(0.01)
-                t.close()
+                try:
+                    response = yield t.responses.get(datetime.timedelta(seconds=1))
+                    self.assertEqual(response["status_code"], 202)
+                    self.assertIsNone(response["error"])
+                    self.assertEqual(t.batch_data, {})
+                finally:
+                    t.close()
 
             tornado.ioloop.IOLoop.current().run_sync(_test)
             m_statsd.return_value.incr.assert_any_call("messages_queued")
@@ -123,3 +128,63 @@ class TestTornadoTransmissionQueueOverflow(unittest.TestCase):
             m_statsd.return_value.incr.assert_any_call("queue_overflow")
             # shouldn't throw exception when response is full
             t.send(mock.Mock())
+
+
+class TestTornadoResponsesOverHTTP(tornado.testing.AsyncHTTPTestCase):
+    """Exercise public event sends with the real Tornado HTTP transport."""
+
+    def get_app(self):
+        owner = self
+
+        class BatchHandler(tornado.web.RequestHandler):
+            def post(self, _dataset):
+                owner.received.append(self.request.body)
+                self.set_status(owner.http_status)
+                self.finish(owner.response_body)
+
+        self.received = []
+        self.http_status = 200
+        self.response_body = '[{"status": 202}]'
+        return tornado.web.Application([(r"/1/batch/(.*)", BatchHandler)])
+
+    async def send_event(self):
+        xmit = transmission.TornadoTransmission(
+            send_frequency=datetime.timedelta(milliseconds=1))
+        client = libhoney.client.Client(
+            writekey="dummy-key", dataset="test", api_host=self.get_url('/'),
+            transmission_impl=xmit)
+        event = client.new_event()
+        event.add_field("test", True)
+        event.metadata = {"event": "one"}
+        try:
+            event.send()
+            response = await xmit.responses.get(datetime.timedelta(seconds=1))
+            self.assertEqual(response["metadata"], {"event": "one"})
+            self.assertEqual(len(self.received), 1)
+            self.assertEqual(xmit.batch_data, {})
+            return response
+        finally:
+            client.close()
+            await tornado.gen.sleep(0)
+            xmit.http_client.close()
+
+    @tornado.testing.gen_test
+    async def test_success_is_reported_and_batch_state_is_released(self):
+        response = await self.send_event()
+        self.assertEqual(response["status_code"], 202)
+        self.assertIsNone(response["error"])
+
+    @tornado.testing.gen_test
+    async def test_http_error_retains_the_actual_status(self):
+        self.http_status = 400
+        self.response_body = '{"error": "invalid test request"}'
+        response = await self.send_event()
+        self.assertEqual(response["status_code"], 400)
+        self.assertIsInstance(response["error"], tornado.httpclient.HTTPClientError)
+
+    @tornado.testing.gen_test
+    async def test_invalid_json_is_reported_and_batch_state_is_released(self):
+        self.response_body = 'not json'
+        response = await self.send_event()
+        self.assertEqual(response["status_code"], 200)
+        self.assertIsInstance(response["error"], ValueError)

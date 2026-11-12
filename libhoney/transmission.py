@@ -392,10 +392,11 @@ if has_tornado:
                     },
                     body=json.dumps(payload, default=json_default_handler),
                 )
-                yield self.http_client.fetch(req, self._response_callback)
-                # store the events that were sent so we can process responses later
-                # it is important that we delete these eventually, or we'll run into memory issues
+                resp = yield self.http_client.fetch(req, raise_error=False)
+                # Tornado 6 returns a Future instead of invoking a callback.
+                # Record the batch before processing its completed response.
                 self.batch_data[req] = {"start": start, "events": events}
+                self._response_callback(resp)
             except Exception as e:
                 # Catch all exceptions and hand them to the responses queue.
                 self._enqueue_errors(status_code, e, start, events)
