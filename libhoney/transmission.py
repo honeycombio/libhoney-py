@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 import gzip
 import io
 import json
+import math
 import threading
 import statsd
 import sys
@@ -175,17 +176,10 @@ class Transmission():
         try:
             url = urljoin(urljoin(destination.api_host, "/1/batch/"),
                           destination.dataset)
-            payload = []
-            for ev in events:
-                event_time = ev.created_at.isoformat()
-                if ev.created_at.tzinfo is None:
-                    event_time += "Z"
-                payload.append({
-                    "time": event_time,
-                    "samplerate": ev.sample_rate,
-                    "data": ev.fields()})
+            data, events = _encode_batch(self, events, start)
+            if not events:
+                return
 
-            data = json.dumps(payload, default=json_default_handler)
             if self.gzip_enabled:
                 # The gzip lib works with file-like objects so we use a buffered byte stream
                 stream = io.BytesIO()
@@ -197,7 +191,7 @@ class Transmission():
                 compressor.close()
                 data = stream.getvalue()
                 stream.close()
-            self.log("firing batch, size = %d", len(payload))
+            self.log("firing batch, size = %d", len(events))
             resp = self.session.post(
                 url,
                 headers={"X-Honeycomb-Team": destination.writekey,
@@ -374,15 +368,9 @@ if has_tornado:
                 yield self.batch_sem.acquire()
                 url = urljoin(urljoin(destination.api_host, "/1/batch/"),
                               destination.dataset)
-                payload = []
-                for ev in events:
-                    event_time = ev.created_at.isoformat()
-                    if ev.created_at.tzinfo is None:
-                        event_time += "Z"
-                    payload.append({
-                        "time": event_time,
-                        "samplerate": ev.sample_rate,
-                        "data": ev.fields()})
+                data, events = _encode_batch(self, events, start)
+                if not events:
+                    return
                 req = HTTPRequest(
                     url,
                     method='POST',
@@ -390,7 +378,7 @@ if has_tornado:
                         "X-Honeycomb-Team": destination.writekey,
                         "Content-Type": "application/json",
                     },
-                    body=json.dumps(payload, default=json_default_handler),
+                    body=data,
                 )
                 yield self.http_client.fetch(req, self._response_callback)
                 # store the events that were sent so we can process responses later
@@ -528,6 +516,71 @@ def group_events_by_destination(events):
     for ev in events:
         ret[destination(ev.writekey, ev.dataset, ev.api_host)].append(ev)
     return ret
+
+
+def _encode_batch(xmit, events, start):
+    '''Serializes the events to a JSON batch body. Events that cannot be
+    serialized get an error response on the transmission's response queue and
+    are left out, so one bad event does not take the rest of the batch down
+    with it. Returns the body and the events that made it into it.'''
+    body, sendable, failures = encode_batch(events)
+    for ev, err in failures:
+        xmit.sd.incr("send_errors")
+        xmit._enqueue_response(0, "", err, start, ev.metadata)  # pylint: disable=protected-access
+    return body, sendable
+
+
+def _jsonable(obj):
+    '''Returns a copy of obj that json can encode without producing invalid
+    output: dict keys become strings and the floats JSON has no literal for
+    (NaN and the infinities) become strings.'''
+    if isinstance(obj, float):
+        if math.isnan(obj):
+            return "NaN"
+        if math.isinf(obj):
+            return "Infinity" if obj > 0 else "-Infinity"
+        return obj
+    if isinstance(obj, dict):
+        return {(k if isinstance(k, str) else str(k)): _jsonable(v)
+                for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_jsonable(v) for v in obj]
+    return obj
+
+
+def _encode_event(ev):
+    '''Returns the JSON for a single event in a batch request body.'''
+    event_time = ev.created_at.isoformat()
+    if ev.created_at.tzinfo is None:
+        event_time += "Z"
+    item = {
+        "time": event_time,
+        "samplerate": ev.sample_rate,
+        "data": ev.fields(),
+    }
+    try:
+        return json.dumps(item, default=json_default_handler, allow_nan=False)
+    except (TypeError, ValueError):
+        # NaN, an infinity, or a key json cannot use. The API rejects a whole
+        # batch that holds a bare NaN, so clean the data up and try once more.
+        item["data"] = _jsonable(item["data"])
+        return json.dumps(item, default=json_default_handler, allow_nan=False)
+
+
+def encode_batch(events):
+    '''Builds the JSON body of a batch request. Returns the body, the events
+    in it, and a list of (event, error) for the events that could not be
+    encoded at all, for example because they hold a circular reference.'''
+    encoded = []
+    sendable = []
+    failures = []
+    for ev in events:
+        try:
+            encoded.append(_encode_event(ev))
+            sendable.append(ev)
+        except (TypeError, ValueError, RecursionError) as e:
+            failures.append((ev, e))
+    return "[" + ",".join(encoded) + "]", sendable, failures
 
 
 def _safe_submit(pool, *args, **kwargs):

@@ -1,5 +1,6 @@
 '''Tests for libhoney/transmission.py'''
 import datetime
+import json
 import unittest
 from unittest import mock
 
@@ -104,6 +105,46 @@ class TestTornadoTransmissionSendError(unittest.TestCase):
                     t.close()
 
             tornado.ioloop.IOLoop.current().run_sync(_test)
+
+
+class TestTornadoTransmissionUnencodableEvents(unittest.TestCase):
+    def test_bad_event_is_reported_and_the_rest_is_sent(self):
+        with mock.patch('libhoney.transmission.AsyncHTTPClient.fetch') as fetch_mock,\
+                mock.patch('statsd.StatsClient') as m_statsd:
+            future = tornado.concurrent.Future()
+            future.set_result("OK")
+            fetch_mock.return_value = future
+            m_statsd.return_value = mock.Mock()
+
+            loop = {}
+            loop["self"] = loop
+
+            def make_event(fields, metadata):
+                ev = mock.Mock(metadata=metadata, writekey="abc123",
+                               dataset="blargh", api_host="https://example.com",
+                               sample_rate=1, created_at=datetime.datetime.now())
+                ev.fields.return_value = fields
+                return ev
+
+            @tornado.gen.coroutine
+            def _test():
+                t = transmission.TornadoTransmission()
+                t.start()
+                t.send(make_event({"n": 1}, "good"))
+                t.send(make_event({"loop": loop}, "bad"))
+                try:
+                    resp = yield t.responses.get(datetime.timedelta(0, 10))
+                    self.assertEqual(resp["metadata"], "bad")
+                    self.assertEqual(resp["status_code"], 0)
+                except tornado.util.TimeoutError:
+                    self.fail("timed out waiting on response queue")
+                finally:
+                    t.close()
+
+            tornado.ioloop.IOLoop.current().run_sync(_test)
+            self.assertEqual(fetch_mock.call_count, 1)
+            req = fetch_mock.call_args[0][0]
+            self.assertEqual([e["data"] for e in json.loads(req.body)], [{"n": 1}])
 
 
 class TestTornadoTransmissionQueueOverflow(unittest.TestCase):

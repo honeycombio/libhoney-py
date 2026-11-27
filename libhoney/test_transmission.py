@@ -183,6 +183,116 @@ class TestTransmissionSend(unittest.TestCase):
                 self.assertEqual(data[0]['data']['key'], 'asdf')
 
 
+class TestTransmissionUnencodableEvents(unittest.TestCase):
+    '''One event that cannot be turned into JSON must not cost the rest of
+    its batch.'''
+
+    def _event(self, fields, metadata=None):
+        ev = FakeEvent()
+        ev.metadata = metadata
+        ev.writekey = "writeme"
+        ev.dataset = "datame"
+        ev.api_host = "http://urlme/"
+        ev.sample_rate = 1
+        ev.fields = lambda: fields
+        return ev
+
+    def _send_all(self, events, **kwargs):
+        with requests_mock.Mocker() as m:
+            m.post("http://urlme/1/batch/datame",
+                   text=json.dumps(len(events) * [{"status": 202}]),
+                   status_code=200)
+            t = transmission.Transmission(gzip_enabled=False, **kwargs)
+            t.start()
+            for ev in events:
+                t.send(ev)
+            t.close()
+            responses = []
+            while not t.responses.empty():
+                resp = t.responses.get()
+                if resp is not None:
+                    responses.append(resp)
+            return m.request_history, responses
+
+    def test_circular_reference_only_fails_that_event(self):
+        loop = {}
+        loop["self"] = loop
+        events = [
+            self._event({"n": 1}, metadata="good-1"),
+            self._event({"loop": loop}, metadata="bad"),
+            self._event({"n": 2}, metadata="good-2"),
+        ]
+        requests, responses = self._send_all(events)
+
+        sent = [e["data"] for r in requests for e in r.json()]
+        self.assertEqual(sent, [{"n": 1}, {"n": 2}])
+        by_meta = {r["metadata"]: r for r in responses}
+        self.assertEqual(by_meta["good-1"]["status_code"], 202)
+        self.assertEqual(by_meta["good-2"]["status_code"], 202)
+        self.assertEqual(by_meta["bad"]["status_code"], 0)
+        self.assertIsNotNone(by_meta["bad"]["error"])
+
+    def test_batch_of_only_unencodable_events_makes_no_request(self):
+        loop = []
+        loop.append(loop)
+        requests, responses = self._send_all(
+            [self._event({"loop": loop}, metadata="bad")])
+
+        self.assertEqual(requests, [])
+        self.assertEqual(len(responses), 1)
+        self.assertEqual(responses[0]["metadata"], "bad")
+        self.assertIsNotNone(responses[0]["error"])
+
+    def test_nan_and_infinity_are_sent_as_strings(self):
+        events = [self._event({
+            "nan": float("nan"),
+            "inf": float("inf"),
+            "ninf": float("-inf"),
+            "nested": {"values": [1.5, float("nan")]},
+            "ok": 2.5,
+        })]
+        requests, responses = self._send_all(events)
+
+        def refuse(name):
+            raise ValueError("bare " + name + " in request body")
+        # parse_constant only fires for a bare NaN, Infinity or -Infinity
+        json.loads(requests[0].text, parse_constant=refuse)
+        data = requests[0].json()[0]["data"]
+        self.assertEqual(data["nan"], "NaN")
+        self.assertEqual(data["inf"], "Infinity")
+        self.assertEqual(data["ninf"], "-Infinity")
+        self.assertEqual(data["nested"], {"values": [1.5, "NaN"]})
+        self.assertEqual(data["ok"], 2.5)
+        self.assertEqual(responses[0]["status_code"], 202)
+
+    def test_non_string_keys_are_converted(self):
+        events = [self._event({"tags": {("a", 1): "x", 7: "y"}})]
+        requests, responses = self._send_all(events)
+
+        data = requests[0].json()[0]["data"]
+        self.assertEqual(data["tags"], {"('a', 1)": "x", "7": "y"})
+        self.assertEqual(responses[0]["status_code"], 202)
+
+
+class TestEncodeBatch(unittest.TestCase):
+    def test_body_is_strict_json(self):
+        ev = FakeEvent()
+        ev.sample_rate = 1
+        ev.fields = lambda: {"v": float("nan")}
+        body, sendable, failures = transmission.encode_batch([ev])
+
+        def refuse(name):
+            raise ValueError("non-finite constant " + name)
+        # parse_constant is only called for bare NaN, Infinity, -Infinity
+        parsed = json.loads(body, parse_constant=refuse)
+        self.assertEqual(parsed[0]["data"], {"v": "NaN"})
+        self.assertEqual(sendable, [ev])
+        self.assertEqual(failures, [])
+
+    def test_empty(self):
+        self.assertEqual(transmission.encode_batch([]), ("[]", [], []))
+
+
 class TestTransmissionQueueOverflow(unittest.TestCase):
     def test_send(self):
         t = transmission.Transmission(max_pending=2, max_responses=1)
